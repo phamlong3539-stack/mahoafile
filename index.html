@@ -18,7 +18,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   
   <!-- Main Stylesheet -->
-  <link rel="stylesheet" href="style.css?v=5.2.0" />
+  <link rel="stylesheet" href="style.css?v=5.4.0" />
 </head>
 <body>
   <!-- Group Promotion Banner -->
@@ -1711,13 +1711,13 @@
   <!-- QRCode.js for generating QR Codes -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <!-- Application Logic -->
-  <script src="app.js?v=5.2.0"></script>
+  <script src="app.js?v=5.4.0"></script>
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(regs => {
         regs.forEach(r => r.update());
       });
-      navigator.serviceWorker.register('./sw.js?v=5.2.0').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=5.4.0').catch(() => {});
     }
   </script>
 </body>

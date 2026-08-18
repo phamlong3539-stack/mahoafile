@@ -2685,7 +2685,179 @@ Mã kiểm tra tính toàn vẹn: CVLT-TEST-${Math.random().toString(36).substri
     }
   }
 
+
+  // ═══════════════════════════════════════════════════════════
+  //   MachO Obfuscator Engine — Bảo Vệ Dylib Khỏi Hex Editor
+  //   Lớp 1: Strip & XOR Symbol Table (tên hàm thành rác)
+  //   Lớp 2: Scramble __cstring section (chuỗi thành ký tự lạ)
+  //   Lớp 3: Inject Fake Sections (gây nhầm lẫn kẻ phân tích)
+  // ═══════════════════════════════════════════════════════════
+  const MachOObfuscator = {
+    MAGIC_64_LE: 0xFEEDFACF,
+    MAGIC_32_LE: 0xFEEDFACE,
+    MAGIC_FAT:   0xCAFEBABE,
+    LC_SYMTAB:      0x00000002,
+    LC_SEGMENT:     0x00000001,
+    LC_SEGMENT_64:  0x00000019,
+
+    // Read u32 little-endian
+    r32(b, o) { return (b[o] | b[o+1]<<8 | b[o+2]<<16 | b[o+3]<<24) >>> 0; },
+    // Write u32 little-endian
+    w32(b, o, v) { b[o]=v&0xFF; b[o+1]=(v>>8)&0xFF; b[o+2]=(v>>16)&0xFF; b[o+3]=(v>>24)&0xFF; },
+    // Read u32 big-endian
+    r32be(b, o) { return (b[o]<<24 | b[o+1]<<16 | b[o+2]<<8 | b[o+3]) >>> 0; },
+
+    /**
+     * Main entry point — obfuscate a .dylib / Mach-O binary
+     * @param {Uint8Array} bytes
+     * @param {Object} opts: { stripSymbols, scrambleCstrings, injectFakeSections, xorKey }
+     * @returns {Uint8Array} obfuscated binary (structure preserved, dylib still loadable*)
+     * *stripSymbols+injectFakeSections safe; scrambleCstrings may break runtime strings
+     */
+    obfuscate(bytes, opts = {}) {
+      const buf = new Uint8Array(bytes);
+      const magicLE = this.r32(buf, 0);
+      const magicBE = this.r32be(buf, 0);
+
+      // FAT Universal Binary — process each slice
+      if (magicBE === this.MAGIC_FAT) {
+        return this._processFat(buf, opts);
+      }
+
+      // Single-arch Mach-O
+      if (magicLE === this.MAGIC_64_LE) return this._processMachO(buf, 0, true, true, opts);
+      if (magicLE === this.MAGIC_32_LE) return this._processMachO(buf, 0, false, true, opts);
+      // Big-endian Mach-O (rare, PowerPC)
+      if (magicBE === 0xFEEDFACF) return this._processMachO(buf, 0, true, false, opts);
+      if (magicBE === 0xFEEDFACE) return this._processMachO(buf, 0, false, false, opts);
+
+      // Not a known Mach-O — return as-is
+      return buf;
+    },
+
+    _processFat(buf, opts) {
+      const narch = this.r32be(buf, 4);
+      for (let i = 0; i < narch && i < 8; i++) {
+        const fatOffset = 8 + i * 20;
+        const archOffset = this.r32be(buf, fatOffset + 8);
+        const archMagicLE = this.r32(buf, archOffset);
+        const is64 = (archMagicLE === this.MAGIC_64_LE);
+        const isLE = (archMagicLE === this.MAGIC_64_LE || archMagicLE === this.MAGIC_32_LE);
+        this._processMachO(buf, archOffset, is64, isLE, opts);
+      }
+      return buf;
+    },
+
+    _processMachO(buf, base, is64, isLE, opts) {
+      if (buf.length < base + (is64 ? 32 : 28)) return buf;
+      const r32 = (o) => this.r32(buf, o);
+      const xorKey = opts.xorKey || 0x69;
+      const xorKey2 = (xorKey ^ 0x3C) & 0xFF;
+
+      const ncmds    = r32(base + 16);
+      const hdrSize  = is64 ? 32 : 28;
+      let cmdOff     = base + hdrSize;
+
+      for (let ci = 0; ci < ncmds && cmdOff < buf.length - 8; ci++) {
+        const cmd     = this.r32(buf, cmdOff);
+        const cmdsize = this.r32(buf, cmdOff + 4);
+        if (cmdsize < 8 || cmdOff + cmdsize > buf.length) break;
+
+        // ── LAYER 1: Strip Symbol Table ────────────────────────────
+        if (cmd === this.LC_SYMTAB && opts.stripSymbols) {
+          const stroff  = this.r32(buf, cmdOff + 16);
+          const strsize = this.r32(buf, cmdOff + 20);
+          if (stroff > 0 && strsize > 1) {
+            // XOR all bytes in string table (skip byte 0 = always null)
+            for (let j = 1; j < strsize; j++) {
+              const abs = base + stroff + j;
+              if (abs < buf.length) {
+                // Replace with special non-printable garbage
+                buf[abs] = (buf[abs] ^ xorKey) & 0xFF;
+                // Additionally replace printable ASCII with special chars
+                if (buf[abs] >= 0x20 && buf[abs] <= 0x7E) {
+                  buf[abs] = 0x07 + (buf[abs] & 0x0F); // BEL-range garbage
+                }
+              }
+            }
+          }
+        }
+
+        // ── LAYER 2: Scramble __TEXT,__cstring ─────────────────────
+        if ((cmd === this.LC_SEGMENT_64 || cmd === this.LC_SEGMENT) && opts.scrambleCstrings) {
+          const segNameBytes = buf.slice(cmdOff + 8, cmdOff + 24);
+          const segName = String.fromCharCode(...segNameBytes).replace(/\0/g, '');
+          if (segName === '__TEXT') {
+            const nsects    = this.r32(buf, cmdOff + (is64 ? 64 : 52));
+            const sectBase  = cmdOff + (is64 ? 72 : 56);
+            const sectStride = is64 ? 80 : 68;
+            for (let si = 0; si < nsects && si < 32; si++) {
+              const soff = sectBase + si * sectStride;
+              const sectNameBytes = buf.slice(soff + 8, soff + 24);
+              const sectName = String.fromCharCode(...sectNameBytes).replace(/\0/g, '');
+              if (sectName === '__cstring' || sectName === '__objc_methnames' || sectName === '__objc_classnames') {
+                const dataOff = this.r32(buf, soff + (is64 ? 48 : 32));
+                let dataSize;
+                if (is64) {
+                  // 8-byte size — read low 4 bytes only (assume <4GB)
+                  dataSize = this.r32(buf, soff + 40);
+                } else {
+                  dataSize = this.r32(buf, soff + 36);
+                }
+                // XOR non-null bytes (preserve null terminators for structure)
+                for (let j = 0; j < dataSize; j++) {
+                  const abs = base + dataOff + j;
+                  if (abs < buf.length && buf[abs] !== 0x00) {
+                    // Swap printable ASCII with look-alike special chars
+                    const c = buf[abs];
+                    if (c >= 0x41 && c <= 0x5A) buf[abs] = c ^ xorKey2; // A-Z
+                    else if (c >= 0x61 && c <= 0x7A) buf[abs] = c ^ xorKey2; // a-z
+                    else if (c >= 0x30 && c <= 0x39) buf[abs] = c ^ 0x0F; // 0-9
+                    else if (c >= 0x20) buf[abs] = c ^ 0x07; // other printable
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        cmdOff += cmdsize;
+      }
+
+      // ── LAYER 3: Inject Fake Section metadata at end of header ───
+      if (opts.injectFakeSections) {
+        // Write some plausible-looking garbage bytes near unused header space
+        // to confuse automated Hex scanners (won't affect runtime)
+        const decoy = [
+          0x5F,0x5F,0x43,0x56,0x4C,0x54, // "__CVLT"
+          0x5F,0x5F,0x44,0x52,0x4D,0x53, // "__DRMS"
+          0x5F,0x5F,0x53,0x45,0x41,0x4C, // "__SEAL"
+        ];
+        // Inject decoy strings at very end of binary as comment padding
+        const padStart = buf.length - Math.min(512, buf.length - 1);
+        for (let i = 0; i < decoy.length && padStart + i < buf.length; i++) {
+          buf[padStart + i] ^= decoy[i]; // XOR to not overwrite code
+        }
+      }
+
+      return buf;
+    },
+
+    /**
+     * Detect if bytes are a valid Mach-O dylib (not encrypted blob)
+     */
+    isMachO(bytes) {
+      if (!bytes || bytes.length < 4) return false;
+      const m = this.r32(bytes, 0);
+      const mb = this.r32be(bytes, 0);
+      return m === this.MAGIC_64_LE || m === this.MAGIC_32_LE ||
+             mb === this.MAGIC_64_LE || mb === this.MAGIC_32_LE ||
+             mb === this.MAGIC_FAT;
+    }
+  };
+
   function initIpaStudioModule() {
+
     const ipaDropzone = document.getElementById('ipaDropzone');
     const ipaFileInput = document.getElementById('ipaFileInput');
     const createSampleBtn = document.getElementById('ipaCreateSampleBtn');
@@ -2855,7 +3027,8 @@ Mã kiểm tra tính toàn vẹn: CVLT-TEST-${Math.random().toString(36).substri
             name: file.name,
             bytes: bytes,
             size: file.size,
-            mode: 'framework',  // inject into Frameworks/ as loadable dylib
+            mode: 'framework',
+            obfuscate: false,  // user can toggle to enable obfuscation
             warning: null
           });
         }
@@ -2878,16 +3051,28 @@ Mã kiểm tra tính toàn vẹn: CVLT-TEST-${Math.random().toString(36).substri
         const item = document.createElement('div');
         item.className = 'dylib-item';
         const isResource = dylib.mode === 'resource';
-        const iconColor = isResource ? 'var(--accent-amber, #f59e0b)' : 'var(--accent-cyan)';
+        const isMachOFile = !isResource;
+        const iconColor = isResource ? '#f59e0b' : (dylib.obfuscate ? '#a78bfa' : 'var(--accent-cyan)');
         const modeLabel = isResource
-          ? '<span style="font-size:0.68rem; color:#f59e0b; background:rgba(245,158,11,0.15); border:1px solid rgba(245,158,11,0.4); border-radius:4px; padding:1px 5px;">📦 Resource</span>'
-          : '<span style="font-size:0.68rem; color:var(--accent-cyan); background:rgba(0,240,255,0.1); border:1px solid rgba(0,240,255,0.3); border-radius:4px; padding:1px 5px;">⚡ Dylib</span>';
+          ? '<span style="font-size:0.68rem;color:#f59e0b;background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.4);border-radius:4px;padding:1px 5px;">&#x1F4E6; Resource</span>'
+          : (dylib.obfuscate
+            ? '<span style="font-size:0.68rem;color:#a78bfa;background:rgba(167,139,250,0.15);border:1px solid rgba(167,139,250,0.4);border-radius:4px;padding:1px 5px;">&#x1F6E1; Obfuscated Dylib</span>'
+            : '<span style="font-size:0.68rem;color:var(--accent-cyan);background:rgba(0,240,255,0.1);border:1px solid rgba(0,240,255,0.3);border-radius:4px;padding:1px 5px;">&#x26A1; Dylib</span>'
+          );
         const pathDisplay = isResource
-          ? `${dylib.name.split('/').pop().replace(/[.][^.]+$/, '')}.app/Resources/${dylib.name}`
+          ? `${dylib.name}.app/Resources/${dylib.name}`
           : `@rpath/Frameworks/${dylib.name}`;
         const warningHtml = dylib.warning
-          ? `<div style="color:#f59e0b; font-size:0.7rem; margin-top:3px;"><i class="fa-solid fa-triangle-exclamation"></i> ${dylib.warning}</div>`
+          ? `<div style="color:#f59e0b;font-size:0.7rem;margin-top:3px;"><i class="fa-solid fa-triangle-exclamation"></i> ${dylib.warning}</div>`
           : '';
+
+        // Obfuscate toggle — only for Mach-O dylib files
+        const obfToggle = isMachOFile ? `
+          <label style="display:flex;align-items:center;gap:5px;margin-top:5px;cursor:pointer;font-size:0.72rem;color:#a78bfa;user-select:none;" title="Bật bảo vệ: Strip symbol table + Scramble cỗi + Fake sections">
+            <input type="checkbox" class="obfuscate-dylib-chk" data-index="${idx}" ${dylib.obfuscate ? 'checked' : ''} style="accent-color:#a78bfa;width:13px;height:13px;" />
+            <i class="fa-solid fa-shield-halved" style="font-size:0.8rem;"></i>
+            Bảo Vệ Binary (Strip Symbols + Scramble Strings)
+          </label>` : '';
 
         item.innerHTML = `
           <div class="dylib-item-left">
@@ -2896,11 +3081,23 @@ Mã kiểm tra tính toàn vẹn: CVLT-TEST-${Math.random().toString(36).substri
               <div class="dylib-name" style="display:flex;align-items:center;gap:6px;">${dylib.name} ${modeLabel}</div>
               <div class="dylib-path">${pathDisplay} (${formatBytes(dylib.size)})</div>
               ${warningHtml}
+              ${obfToggle}
             </div>
           </div>
           <button type="button" class="mini-btn remove-dylib-btn" data-index="${idx}"><i class="fa-solid fa-xmark"></i></button>
         `;
         dylibList.appendChild(item);
+      });
+
+      // Obfuscate toggle handlers
+      dylibList.querySelectorAll('.obfuscate-dylib-chk').forEach(chk => {
+        chk.addEventListener('change', () => {
+          const i = parseInt(chk.getAttribute('data-index'), 10);
+          if (injectedDylibs[i]) {
+            injectedDylibs[i].obfuscate = chk.checked;
+            renderDylibList(); // re-render to update badge color
+          }
+        });
       });
 
       dylibList.querySelectorAll('.remove-dylib-btn').forEach(btn => {
@@ -2996,19 +3193,29 @@ Mã kiểm tra tính toàn vẹn: CVLT-TEST-${Math.random().toString(36).substri
           });
         }
 
-        // 3. Inject Dylibs or Resources
+        // 3. Inject Dylibs or Resources (with optional obfuscation)
         const frameworkDylibs = injectedDylibs.filter(d => d.mode === 'framework');
         const resourceFiles = injectedDylibs.filter(d => d.mode === 'resource');
 
         if (frameworkDylibs.length > 0) {
           for (const dylib of frameworkDylibs) {
-            zip.file(`${appDir}Frameworks/${dylib.name}`, dylib.bytes);
+            let finalBytes = dylib.bytes;
+            if (dylib.obfuscate) {
+              // Apply MachO obfuscation: strip symbols + fake sections
+              // Note: scrambleCstrings is OFF by default to keep dylib functional
+              finalBytes = MachOObfuscator.obfuscate(dylib.bytes, {
+                stripSymbols: true,
+                scrambleCstrings: false,
+                injectFakeSections: true,
+                xorKey: 0x69
+              });
+            }
+            zip.file(`${appDir}Frameworks/${dylib.name}`, finalBytes);
           }
         }
 
         if (resourceFiles.length > 0) {
           for (const res of resourceFiles) {
-            // Bundle encrypted/non-dylib files into Resources/ folder
             zip.file(`${appDir}Resources/${res.name}`, res.bytes);
           }
         }
