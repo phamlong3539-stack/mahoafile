@@ -13,26 +13,20 @@
   // ██║     ██║██╔═══╝ ██╔══██║██╔══╝  ██╔══██╗╚██╗ ██╔╝██╔══██║██║     ██║
   // ╚██████╗██║██║     ██║  ██║███████╗██║  ██║ ╚████╔╝ ██║  ██║███████╗██║
   //  ╚═════╝╚═╝╚═╝     ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝  ╚═══╝  ╚═╝  ╚═╝╚══════╝╚═╝
-  //  MULTI-LAYER ANTI-CRACK SHIELD v4.2 — DO NOT MODIFY UNDER PENALTY OF BAN
+  //  MILITARY-GRADE ANTI-CRACK & ANTI-REVERSE SHIELD v5.0 (14 DEFENSE LAYERS)
   // ============================================================================
 
   /* ---- DECOY TRAP ZONE (DO NOT REMOVE — HONEYPOT LAYER) -------------------
-   * The following variables are INTENTIONALLY misleading.
-   * Any attempt to patch these will result in the system entering LOCKOUT MODE.
+   * WARNING: The variables below are INTENTIONALLY deceptive honeypots.
+   * Modifying or accessing these will trigger automatic lockdown and blacklist.
    *
-   * const _MASTER_BYPASS_ = "CVLT-ADMIN-9999-FREE-XXXX";   // FAKE — triggers ban
-   * const _DEV_UNLOCK_KEY_ = "unlock_all_features_v2";      // FAKE — triggers ban
-   * const __ROOT_PASS__ = "password123";                    // FAKE — triggers ban
-   * const ADMIN_OVERRIDE = { user:"admin", pass:"admin" };  // FAKE — triggers ban
+   * const _MASTER_ADMIN_BYPASS_ = "CVLT-UNLIMITED-ROOT-BYPASS-9999"; 
+   * const _CRACK_DEV_TOKEN_ = "0xCVLT_DEVELOPER_MASTER_SIGNATURE";
+   * const __HARDCODED_ROOT_KEY__ = "freefire10_admin_master_access";
    *
-   * Real credentials are hashed with SHA-256 + PBKDF2 and stored as byte arrays.
-   * Patching the UI or localStorage will not grant access — server-side validation
-   * is enforced via cryptographic signatures.
+   * All true cryptographic credentials use salted SHA-256 + PBKDF2 hashes.
    * -------------------------------------------------------------------------*/
 
-  // ============================================================================
-  // [LAYER 1] DEVTOOLS DETECTION — Multi-method timing + resize + debugger loop
-  // ============================================================================
   const _CipherShield = (() => {
     let _devtoolsOpen = false;
     let _loginAttempts = 0;
@@ -40,7 +34,14 @@
     const MAX_ATTEMPTS = 5;
     const LOCKOUT_MS = 5 * 60 * 1000; // 5 phút
 
-    // Method A: Timing-based debugger detection
+    // [LAYER 1] ANTI-CLICKJACKING & IFRAME HIJACK PROTECTION
+    try {
+      if (window.top !== window.self) {
+        window.top.location = window.self.location;
+      }
+    } catch {}
+
+    // [LAYER 2] TIMING-BASED DEBUGGER DETECTION
     function _detectByTiming() {
       const t1 = performance.now();
       // eslint-disable-next-line no-debugger
@@ -49,7 +50,7 @@
       return (t2 - t1) > 100;
     }
 
-    // Method B: Window size fingerprint
+    // [LAYER 3] DYNAMIC WINDOW RESIZE FINGERPRINT
     function _detectBySize() {
       const threshold = 160;
       return (
@@ -58,75 +59,65 @@
       );
     }
 
-    // Method C: toString override detection
+    // [LAYER 4] TOSTRING GETTER DEVTOOLS DETECTION
     function _detectByToString() {
       let detected = false;
       const d = document.createElement('div');
       Object.defineProperty(d, 'id', {
         get: function() { detected = true; return 'x'; }
       });
-      // console.log will trigger toString getter in DevTools
       return detected;
     }
 
     function _onDevToolsOpen() {
       if (_devtoolsOpen) return;
       _devtoolsOpen = true;
-      // Poison the console
       const _poison = () => {
         console.clear();
-        console.log('%c⛔ CẢNH BÁO AN NINH', 'color:#ef4444;font-size:20px;font-weight:bold;');
-        console.log('%cHệ thống phát hiện bạn đang mở DevTools!', 'color:#f97316;font-size:14px;');
-        console.log('%cMọi hành vi can thiệp, crack hoặc patch đều bị ghi lại và báo cáo.', 'color:#facc15;font-size:12px;');
-        console.log('%c© CipherVault Pro — Được bảo vệ bởi CVLT Shield v4.2', 'color:#6b7280;font-size:10px;');
+        console.log('%c⛔ CẢNH BÁO AN NINH QUÂN ĐỘI', 'color:#ef4444;font-size:22px;font-weight:900;');
+        console.log('%cPhát hiện môi trường phân tích DevTools / Debugger!', 'color:#f97316;font-size:14px;font-weight:bold;');
+        console.log('%cMọi thao tác reverse-engineering đều bị ghi nhận vào hệ thống phòng vệ.', 'color:#facc15;font-size:12px;');
+        console.log('%c© CipherVault Pro — Protected by CVLT Military Shield v5.0', 'color:#6b7280;font-size:10px;');
       };
       _poison();
       setInterval(_poison, 2000);
     }
 
-    // Continuous monitoring
+    // Continuous Monitoring Daemon
     setInterval(() => {
-      if (_detectByTiming() || _detectBySize()) {
+      if (_detectByTiming() || _detectBySize() || _detectByToString()) {
         _onDevToolsOpen();
       } else {
         _devtoolsOpen = false;
       }
     }, 1500);
 
-    // [LAYER 2] KEYBOARD SHORTCUT BLOCKING
+    // [LAYER 5] KEYBOARD SHORTCUTS & DEVTOOLS ENTRY INTERCEPT
     document.addEventListener('keydown', (e) => {
-      // Block F12
       if (e.key === 'F12') { e.preventDefault(); e.stopPropagation(); return false; }
-      // Block Ctrl+Shift+I / Ctrl+Shift+J / Ctrl+Shift+C
-      if (e.ctrlKey && e.shiftKey && ['I','i','J','j','C','c'].includes(e.key)) {
-        e.preventDefault(); return false;
+      if (e.ctrlKey && e.shiftKey && ['I','i','J','j','C','c','K','k'].includes(e.key)) {
+        e.preventDefault(); e.stopPropagation(); return false;
       }
-      // Block Ctrl+U (View Source)
-      if (e.ctrlKey && (e.key === 'U' || e.key === 'u')) {
-        e.preventDefault(); return false;
+      if (e.ctrlKey && (e.key === 'U' || e.key === 'u' || e.key === 'S' || e.key === 's')) {
+        e.preventDefault(); e.stopPropagation(); return false;
       }
     }, true);
 
-    // [LAYER 3] RIGHT-CLICK DISABLE on sensitive modals
+    // [LAYER 6] CONTEXT MENU / RIGHT-CLICK SHIELD
     document.addEventListener('contextmenu', (e) => {
-      const sensitive = e.target.closest('#adminLoginModal, #adminDashboardModal');
+      const sensitive = e.target.closest('#adminLoginModal, #adminDashboardModal, .command-os-console, .audit-table');
       if (sensitive) { e.preventDefault(); return false; }
     });
 
-    // [LAYER 4] CONSOLE POISONING — Override console methods
+    // [LAYER 7] CONSOLE POISONING & SENSITIVE DATA FILTER
     (function _poisonConsole() {
       const _origLog = console.log.bind(console);
-      const _origWarn = console.warn.bind(console);
-      const _origError = console.error.bind(console);
-      const _noop = () => {};
-
-      // Trap any attempt to read credentials via console
-      const _trapMsg = '%c[CVLT SHIELD] Console access logged. All activity is monitored.';
-      const _trapStyle = 'color:#6b7280;font-size:9px;';
+      const _trapMsg = '%c[CVLT SHIELD] Direct memory inspect forbidden. Action recorded.';
+      const _trapStyle = 'color:#ef4444;font-size:10px;font-weight:bold;';
 
       console.log = function(...args) {
         const str = args.join(' ').toLowerCase();
-        if (/password|pass|pin|freefire|admin|credential|secret|token|key|hash|auth/.test(str)) {
+        if (/password|pass|pin|freefire|admin|credential|secret|token|key|hash|auth|root_sig/.test(str)) {
           _origLog(_trapMsg, _trapStyle);
           return;
         }
@@ -134,37 +125,42 @@
       };
     })();
 
-    // [LAYER 5] VIEW-SOURCE BLOCK via meta + CSP headers (client-side hint)
-    // Add a fake meta to mislead source scanners
-    const _fakeMetaDecoy = document.createElement('meta');
-    _fakeMetaDecoy.name = 'cvlt-integrity-hash';
-    _fakeMetaDecoy.content = 'sha256-' + Array.from({length: 44}, () =>
-      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'[Math.floor(Math.random()*64)]
-    ).join('') + '=';
-    document.head.appendChild(_fakeMetaDecoy);
+    // [LAYER 8] SCRIPT INJECTION & TAMPERMONKEY WATCHDOG
+    try {
+      const _observer = new MutationObserver((mutations) => {
+        for (const m of mutations) {
+          for (const node of m.addedNodes) {
+            if (node.tagName === 'SCRIPT' && !node.src.includes('cdnjs') && !node.src.includes('app.js')) {
+              node.remove();
+              console.warn('[CVLT SHIELD] Blocked injected rogue script element.');
+            }
+          }
+        }
+      });
+      _observer.observe(document.documentElement, { childList: true, subtree: true });
+    } catch {}
 
-    // [LAYER 6] INTEGRITY SELF-CHECK — verify critical DOM hasn't been tampered
+    // [LAYER 9] DOM INTEGRITY SELF-HEALING GUARD
     function _integrityCheck() {
       const loginModal = document.getElementById('adminLoginModal');
       const dashboard = document.getElementById('adminDashboardModal');
-      // If critical modals are missing, someone tampered with the DOM
       if (!loginModal || !dashboard) {
         document.body.innerHTML = `
           <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;
-            background:#0a0b10;color:#ef4444;font-family:monospace;text-align:center;flex-direction:column;gap:16px;">
-            <div style="font-size:3rem;">🛡️</div>
-            <h1 style="font-size:1.4rem;color:#f97316;">CVLT SHIELD — INTEGRITY VIOLATION DETECTED</h1>
-            <p style="color:#6b7280;font-size:0.9rem;">Phát hiện can thiệp cấu trúc DOM trái phép.<br>Hệ thống đã bị khóa để bảo vệ dữ liệu.</p>
-            <p style="color:#374151;font-size:0.75rem;">ERROR_CODE: 0xCVLT_4033_DOM_TAMPER</p>
+            background:#07090e;color:#ef4444;font-family:monospace;text-align:center;flex-direction:column;gap:16px;">
+            <div style="font-size:3.5rem;">🛡️</div>
+            <h1 style="font-size:1.5rem;color:#f97316;letter-spacing:1px;">CVLT MILITARY SHIELD — TAMPER DETECTED</h1>
+            <p style="color:#94a3b8;font-size:0.95rem;">Cấu trúc DOM lõi đã bị can thiệp bất hợp pháp.<br>Hệ thống đã tự động khóa toàn bộ phiên làm việc.</p>
+            <p style="color:#475569;font-size:0.75rem;">SECURITY_STATUS: CRITICAL_INTEGRITY_VIOLATION_0xCVLT_99</p>
           </div>`;
         return false;
       }
       return true;
     }
-    setTimeout(_integrityCheck, 3000);
-    setInterval(_integrityCheck, 30000);
+    setTimeout(_integrityCheck, 2000);
+    setInterval(_integrityCheck, 20000);
 
-    // [LAYER 7] LOGIN RATE LIMITER — Max 5 attempts then lockout
+    // [LAYER 10] ANTI-BRUTEFORCE & RATE LIMITER (5 fails = 5 min lock)
     function _checkRateLimit() {
       const now = Date.now();
       if (_lockoutUntil > now) {
@@ -179,7 +175,7 @@
       if (_loginAttempts >= MAX_ATTEMPTS) {
         _lockoutUntil = Date.now() + LOCKOUT_MS;
         _loginAttempts = 0;
-        return true; // locked out now
+        return true;
       }
       return false;
     }
@@ -189,53 +185,62 @@
       _lockoutUntil = 0;
     }
 
-    // [LAYER 8] DECOY GLOBAL HONEYPOTS — Trap crackers probing window object
+    // [LAYER 11] GLOBAL SCOPE HONEYPOT TRAPS (x12 Decoys)
     const _HONEYPOT_KEYS = [
       '__ADMIN_BYPASS__', '_masterKey_', '__unlockAll__',
       '_rootAccess_', '__CVLT_OVERRIDE__', '_patchAdmin_',
-      'CVLT_DEBUG_MODE', '__SECRET_KEY__', '_hackerMode_'
+      'CVLT_DEBUG_MODE', '__SECRET_KEY__', '_hackerMode_',
+      '__ROOT_SUPERUSER__', '_bypassValidation_', '__ADMIN_BACKDOOR__'
     ];
     _HONEYPOT_KEYS.forEach(k => {
       try {
         Object.defineProperty(window, k, {
           get() {
-            // Silently flag and return decoy
-            localStorage.setItem('cvlt_security_flag_' + Date.now(), JSON.stringify({
-              key: k, time: new Date().toISOString(), ua: navigator.userAgent.substring(0, 80)
+            localStorage.setItem('cvlt_sec_incident_' + Date.now(), JSON.stringify({
+              trap: k, timestamp: new Date().toISOString()
             }));
-            return 'ERR_HONEYPOT_TRIGGERED_' + k.toUpperCase() + '_ACCESS_DENIED';
+            return 'ERR_HONEYPOT_TRAP_TRIGGERED_0x403';
+          },
+          set() {
+            return false;
           },
           configurable: false
         });
       } catch {}
     });
 
-    // [LAYER 9] FAKE DECOY CODE in global scope to confuse decompilers
-    // This looks like real admin unlock code but is actually a trap
+    // [LAYER 12] FAKE DECOMPILER DECOY TRAPS
     window._cvlt_sys = {
-      // Decoy: looks like admin unlock but is a trap
-      unlockAdmin: function(token) {
-        localStorage.setItem('cvlt_cracker_flag', JSON.stringify({
-          attempt: 'unlockAdmin', token: String(token).substring(0, 20), ts: Date.now()
-        }));
-        // Return realistic-looking but fake response
-        return { status: 'error', code: 403, message: 'Token invalid or expired. Contact support.' };
-      },
-      // Decoy: looks like key generator bypass
-      generateFreeKey: function() {
-        return 'CVLT-FAKE-DECOY-TRAP-' + Math.random().toString(36).substring(2,6).toUpperCase();
-      },
-      // Decoy: looks like credential getter
-      getRootCredentials: function() {
-        return { user: null, pass: null, pin: null, error: 'SYSTEM_LOCKED_BY_SHIELD' };
-      }
+      unlockAdmin: function() { return { status: 403, error: 'SIGNATURE_REJECTED' }; },
+      generateFreeKey: function() { return 'CVLT-DECOY-TRAP-EXPIRED-NULL'; },
+      getRootCredentials: function() { return { error: 'PROTECTED_BY_KERNEL_SHIELD' }; }
     };
+
+    // [LAYER 13] PROTOTYPE TAMPER FREEZE & MONKEY-PATCH SEAL
+    try {
+      Object.freeze(Object.prototype);
+      Object.freeze(Array.prototype);
+      Object.freeze(String.prototype);
+    } catch {}
+
+    // [LAYER 14] FUNCTION INTEGRITY CHECK (Anti-Hook on Core Validation)
+    function _verifyCoreIntegrity() {
+      try {
+        if (typeof LicenseKeyManager !== 'undefined' && LicenseKeyManager.validateKey) {
+          const fnStr = LicenseKeyManager.validateKey.toString();
+          if (fnStr.includes('return true') || fnStr.includes('return {valid:true}') || !fnStr.includes('expiresTimestamp')) {
+            document.body.innerHTML = '<h1 style="color:red;text-align:center;margin-top:20%;">FATAL: Core Validation Hook Detected!</h1>';
+          }
+        }
+      } catch {}
+    }
+    setInterval(_verifyCoreIntegrity, 15000);
 
     return { checkRateLimit: _checkRateLimit, recordFail: _recordFailedAttempt, recordSuccess: _recordSuccessLogin };
   })();
 
   // ============================================================================
-  // END OF ANTI-CRACK SHIELD — Normal application code begins below
+  // END OF MILITARY ANTI-CRACK SHIELD — Normal application begins below
   // ============================================================================
 
   // --- Constants & Config ---
