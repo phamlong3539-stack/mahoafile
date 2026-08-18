@@ -18,7 +18,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   
   <!-- Main Stylesheet -->
-  <link rel="stylesheet" href="style.css?v=5.0.0" />
+  <link rel="stylesheet" href="style.css?v=5.1.0" />
 </head>
 <body>
   <!-- Group Promotion Banner -->
@@ -57,6 +57,26 @@
       </div>
 
       <div class="header-actions">
+        <!-- Live Key Countdown / Subscription Status Badge -->
+        <div class="user-sub-badge" id="headerSubBadge" style="display: flex; align-items: center; gap: 8px; background: rgba(0, 240, 255, 0.08); border: 1px solid rgba(0, 240, 255, 0.3); padding: 5px 12px; border-radius: 10px; font-size: 0.8rem; font-family: var(--font-mono); color: var(--accent-cyan);">
+          <i class="fa-solid fa-clock-rotate-left" style="color: var(--accent-cyan);"></i>
+          <div style="display: flex; flex-direction: column; line-height: 1.2;">
+            <span style="font-size: 0.68rem; color: var(--text-muted); font-family: var(--font-sans);" id="subBadgeTitle">TRẠNG THÁI BẢN QUYỀN</span>
+            <span style="font-weight: 700; color: #fff;" id="subLiveCountdown">⚡ Miễn Phí (Free Mode)</span>
+          </div>
+          <button type="button" class="mini-btn" id="openActivateKeyDirectBtn" style="padding: 2px 8px; font-size: 0.72rem; background: rgba(0, 240, 255, 0.2); border-color: var(--accent-cyan); color: #fff; margin-left: 4px;" title="Nạp / Kích hoạt Key mới">
+            <i class="fa-solid fa-plus"></i> Nạp Key
+          </button>
+        </div>
+
+        <!-- User Account Login / Profile Button -->
+        <div class="user-account-wrapper" id="userAccountWrapper">
+          <button type="button" class="action-quick-btn user-profile-btn" id="openUserAuthModalBtn" style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.4); color: #34d399;" title="Tài khoản Người Dùng">
+            <i class="fa-solid fa-user-circle"></i>
+            <span id="userAccountLabel">Đăng Nhập / Đăng Ký</span>
+          </button>
+        </div>
+
         <!-- Direct Admin Panel Button -->
         <button class="action-quick-btn admin-btn" id="openAdminModalDirectBtn" style="background: rgba(168, 85, 247, 0.15); border-color: rgba(168, 85, 247, 0.4); color: #c084fc;" title="Mở Bảng Quản Trị Admin (freefire10)">
           <i class="fa-solid fa-user-shield"></i>
@@ -1205,23 +1225,144 @@
     <span class="fab-tooltip">Liên hệ hỗ trợ</span>
   </a>
 
-  <!-- Key Activation Modal (shown when Free Mode is OFF and user has no valid key) -->
-  <div class="modal-backdrop" id="keyActivationModal" style="display: none;">
-    <div class="modal-content glass-card" style="max-width: 480px;">
-      <div class="modal-header">
-        <h3 class="modal-title"><i class="fa-solid fa-key" style="color: var(--accent-amber);"></i> Kích Hoạt Bản Quyền (License Key)</h3>
-      </div>
-      <div class="modal-body" style="text-align: center;">
-        <p style="color: var(--text-secondary); margin-bottom: 16px;">Nhập Key bản quyền để sử dụng đầy đủ tính năng CipherVault Pro. <br/><strong style="color: var(--accent-cyan);">Liên hệ Admin qua Telegram để nhận Key!</strong></p>
-        <div class="password-input-wrapper compact" style="margin-bottom: 14px;">
-          <i class="fa-solid fa-key input-prefix-icon"></i>
-          <input type="text" id="keyActivationInput" class="styled-input font-mono" placeholder="CVLT-XXXX-XXXX-XXXX-XXXX" style="text-transform: uppercase; letter-spacing: 1px;" />
+  <!-- User Authentication Modal (Register / Login) -->
+  <div class="modal-backdrop" id="userAuthModal" style="display: none;">
+    <div class="modal-content glass-card" style="max-width: 440px; border: 1px solid rgba(16, 185, 129, 0.4); box-shadow: 0 10px 40px rgba(0,0,0,0.8), 0 0 30px rgba(16, 185, 129, 0.2);">
+      <div class="modal-header" style="border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 12px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="width: 36px; height: 36px; border-radius: 8px; background: linear-gradient(135deg, #10b981, #06b6d4); display: flex; align-items: center; justify-content: center; color: #fff;">
+            <i class="fa-solid fa-user-shield"></i>
+          </div>
+          <div>
+            <h3 class="modal-title" style="font-size: 1.05rem; margin: 0;">Tài Khoản Người Dùng</h3>
+            <span style="font-size: 0.72rem; color: var(--text-muted);">Khóa Key vào tài khoản - Chống dùng chung</span>
+          </div>
         </div>
-        <button type="button" class="primary-action-btn" id="activateKeyBtn" style="width: 100%;">
-          <i class="fa-solid fa-unlock"></i> KÍCH HOẠT KEY
+        <button type="button" class="modal-close-btn" id="closeUserAuthModalBtn">&times;</button>
+      </div>
+
+      <!-- User Auth Tabs -->
+      <div class="os-login-tabs" style="display: flex; gap: 6px; margin: 14px 0 10px 0; background: rgba(0,0,0,0.4); padding: 4px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+        <button type="button" class="os-tab-btn active" id="tabUserLoginBtn" style="flex: 1; padding: 7px; font-size: 0.8rem; border-radius: 6px; border: none; background: rgba(16, 185, 129, 0.25); color: #fff; cursor: pointer; font-weight: 700;">
+          <i class="fa-solid fa-right-to-bracket"></i> Đăng Nhập
+        </button>
+        <button type="button" class="os-tab-btn" id="tabUserRegisterBtn" style="flex: 1; padding: 7px; font-size: 0.8rem; border-radius: 6px; border: none; background: transparent; color: var(--text-muted); cursor: pointer; font-weight: 700;">
+          <i class="fa-solid fa-user-plus"></i> Đăng Ký Mới
+        </button>
+      </div>
+
+      <div class="modal-body" style="padding-top: 6px;">
+        <!-- Logged In Profile View (shown when user is logged in) -->
+        <div id="userLoggedInProfileView" style="display: none;">
+          <div style="padding: 14px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 10px; margin-bottom: 14px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <span style="font-size: 0.8rem; color: var(--text-muted);">Tài khoản:</span>
+              <strong style="color: #34d399; font-family: var(--font-mono);" id="profileUsername">@user</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <span style="font-size: 0.8rem; color: var(--text-muted);">Tên hiển thị:</span>
+              <strong style="color: #fff;" id="profileDisplayName">User</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <span style="font-size: 0.8rem; color: var(--text-muted);">Thời hạn bản quyền:</span>
+              <strong style="color: var(--accent-cyan); font-family: var(--font-mono);" id="profileExpiryCountdown">Chưa có Key</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 0.8rem; color: var(--text-muted);">Key đang liên kết:</span>
+              <span style="font-size: 0.75rem; color: #fde68a; font-family: var(--font-mono);" id="profileActiveKeyCode">Chưa kích hoạt</span>
+            </div>
+          </div>
+          <button type="button" class="primary-btn" id="profileOpenKeyModalBtn" style="width: 100%; margin-bottom: 10px; background: linear-gradient(135deg, #06b6d4, #3b82f6);">
+            <i class="fa-solid fa-key"></i> Nạp / Kích Hoạt Thêm Key
+          </button>
+          <button type="button" class="secondary-btn" id="userLogoutBtn" style="width: 100%; color: var(--accent-rose);">
+            <i class="fa-solid fa-right-from-bracket"></i> Đăng Xuất Tài Khoản
+          </button>
+        </div>
+
+        <!-- Login Form -->
+        <div id="userLoginFormFields">
+          <div class="input-item" style="margin-bottom: 12px;">
+            <label class="input-label" style="font-size: 0.8rem;"><i class="fa-solid fa-user"></i> Tên tài khoản:</label>
+            <input type="text" id="loginUserUsername" class="styled-input" placeholder="Nhập tài khoản của bạn..." autocomplete="off" />
+          </div>
+          <div class="input-item" style="margin-bottom: 14px;">
+            <label class="input-label" style="font-size: 0.8rem;"><i class="fa-solid fa-lock"></i> Mật khẩu:</label>
+            <div class="password-input-wrapper compact">
+              <i class="fa-solid fa-lock input-prefix-icon"></i>
+              <input type="password" id="loginUserPassword" class="styled-input" placeholder="Nhập mật khẩu..." autocomplete="off" />
+              <button type="button" class="toggle-pwd-visibility-btn" data-target="loginUserPassword" title="Hiện/Ẩn mật khẩu"><i class="fa-solid fa-eye"></i></button>
+            </div>
+          </div>
+          <button type="button" class="primary-action-btn" id="userSubmitLoginBtn" style="width: 100%; padding: 11px; font-weight: 700; background: linear-gradient(135deg, #10b981, #06b6d4);">
+            <i class="fa-solid fa-right-to-bracket"></i> ĐĂNG NHẬP
+          </button>
+        </div>
+
+        <!-- Register Form -->
+        <div id="userRegisterFormFields" style="display: none;">
+          <div class="input-item" style="margin-bottom: 10px;">
+            <label class="input-label" style="font-size: 0.8rem;"><i class="fa-solid fa-id-card"></i> Tên của bạn / Biệt danh:</label>
+            <input type="text" id="regUserDisplayName" class="styled-input" placeholder="Ví dụ: Long Phạm..." autocomplete="off" />
+          </div>
+          <div class="input-item" style="margin-bottom: 10px;">
+            <label class="input-label" style="font-size: 0.8rem;"><i class="fa-solid fa-user-tag"></i> Tên tài khoản (đăng nhập):</label>
+            <input type="text" id="regUserUsername" class="styled-input font-mono" placeholder="Chữ thường, không dấu..." autocomplete="off" />
+          </div>
+          <div class="input-item" style="margin-bottom: 14px;">
+            <label class="input-label" style="font-size: 0.8rem;"><i class="fa-solid fa-lock"></i> Mật khẩu:</label>
+            <div class="password-input-wrapper compact">
+              <i class="fa-solid fa-lock input-prefix-icon"></i>
+              <input type="password" id="regUserPassword" class="styled-input" placeholder="Tạo mật khẩu..." autocomplete="off" />
+              <button type="button" class="toggle-pwd-visibility-btn" data-target="regUserPassword" title="Hiện/Ẩn mật khẩu"><i class="fa-solid fa-eye"></i></button>
+            </div>
+          </div>
+          <button type="button" class="primary-action-btn" id="userSubmitRegisterBtn" style="width: 100%; padding: 11px; font-weight: 700; background: linear-gradient(135deg, #3b82f6, #10b981);">
+            <i class="fa-solid fa-user-plus"></i> ĐĂNG KÝ TÀI KHOẢN
+          </button>
+        </div>
+
+        <p id="userAuthErrorMsg" style="display: none; color: var(--accent-rose); font-size: 0.82rem; margin-top: 10px; text-align: center;"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Activation Modal (shown when Free Mode is OFF or when user clicks Nạp Key) -->
+  <div class="modal-backdrop" id="keyActivationModal" style="display: none;">
+    <div class="modal-content glass-card" style="max-width: 480px; border: 1px solid rgba(0, 240, 255, 0.4); box-shadow: 0 10px 40px rgba(0,0,0,0.8), 0 0 30px rgba(0, 240, 255, 0.2);">
+      <div class="modal-header" style="border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 12px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="width: 36px; height: 36px; border-radius: 8px; background: linear-gradient(135deg, #00f0ff, #6366f1); display: flex; align-items: center; justify-content: center; color: #fff;">
+            <i class="fa-solid fa-key"></i>
+          </div>
+          <div>
+            <h3 class="modal-title" style="font-size: 1.05rem; margin: 0;">Kích Hoạt Bản Quyền (License Key)</h3>
+            <span style="font-size: 0.72rem; color: var(--text-muted);">Khóa bản quyền bảo mật cho tài khoản của bạn</span>
+          </div>
+        </div>
+        <button type="button" class="modal-close-btn" id="closeKeyActivationModalBtn">&times;</button>
+      </div>
+      <div class="modal-body" style="text-align: center; padding-top: 14px;">
+        <!-- Logged-in user indicator -->
+        <div id="keyModalUserInfoBox" style="padding: 8px 12px; background: rgba(0, 240, 255, 0.08); border: 1px solid rgba(0, 240, 255, 0.25); border-radius: 8px; margin-bottom: 12px; font-size: 0.82rem; text-align: left; display: flex; justify-content: space-between; align-items: center;">
+          <span>Đang kích hoạt cho: <strong style="color: var(--accent-cyan);" id="keyModalUsernameLabel">Chưa đăng nhập</strong></span>
+          <span id="keyModalCurrentExpiry" style="font-family: var(--font-mono); color: #fde68a; font-size: 0.75rem;">Hết hạn</span>
+        </div>
+
+        <p style="color: var(--text-secondary); margin-bottom: 14px; font-size: 0.85rem;">
+          Nhập License Key để nạp thêm thời gian vào tài khoản.<br/>
+          <span style="color: var(--accent-amber); font-size: 0.78rem;">⚠️ Key sau khi kích hoạt sẽ được khóa vĩnh viễn vào tài khoản này, chống dùng chung.</span>
+        </p>
+
+        <div class="password-input-wrapper compact" style="margin-bottom: 14px; border-color: rgba(0, 240, 255, 0.4);">
+          <i class="fa-solid fa-key input-prefix-icon" style="color: var(--accent-cyan);"></i>
+          <input type="text" id="keyActivationInput" class="styled-input font-mono" placeholder="CVLT-XXXX-XXXX-XXXX-XXXX" style="text-transform: uppercase; letter-spacing: 1px; font-weight: 700;" autocomplete="off" />
+        </div>
+        <button type="button" class="primary-action-btn" id="activateKeyBtn" style="width: 100%; padding: 12px; font-weight: 700; background: linear-gradient(135deg, #00f0ff, #6366f1); box-shadow: 0 4px 20px rgba(0, 240, 255, 0.3);">
+          <i class="fa-solid fa-unlock"></i> KÍCH HOẠT VÀO TÀI KHOẢN
         </button>
         <div style="margin-top: 14px;">
-          <a href="#" id="keyModalTelegramLink" target="_blank" rel="noopener" style="color: var(--accent-cyan); font-size: 0.85rem;"><i class="fa-brands fa-telegram"></i> Liên hệ Admin nhận Key miễn phí</a>
+          <a href="#" id="keyModalTelegramLink" target="_blank" rel="noopener" style="color: var(--accent-cyan); font-size: 0.85rem;"><i class="fa-brands fa-telegram"></i> Liên hệ Admin/Seller nhận Key mới</a>
         </div>
       </div>
     </div>
@@ -1515,12 +1656,12 @@
             <div class="admin-key-table-wrap">
               <table class="audit-table admin-key-table">
                 <thead>
-                  <tr>
                     <th>License Key</th>
                     <th>Thời hạn</th>
                     <th>Người tạo</th>
                     <th>Ngày tạo</th>
                     <th>Ngày hết hạn</th>
+                    <th>Khóa bởi User</th>
                     <th>Trạng thái</th>
                     <th>Thao tác</th>
                   </tr>
@@ -1570,13 +1711,13 @@
   <!-- QRCode.js for generating QR Codes -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <!-- Application Logic -->
-  <script src="app.js?v=5.0.0"></script>
+  <script src="app.js?v=5.1.0"></script>
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(regs => {
         regs.forEach(r => r.update());
       });
-      navigator.serviceWorker.register('./sw.js?v=5.0.0').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=5.1.0').catch(() => {});
     }
   </script>
 </body>

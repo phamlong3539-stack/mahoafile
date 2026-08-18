@@ -2739,3 +2739,50 @@ body {
 .toggle-pwd-visibility-btn:hover {
   color: var(--accent-cyan);
 }
+
+/* User Subscription Badge & Countdown HUD */
+.user-sub-badge {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.1);
+}
+
+.user-sub-badge.has-active-sub {
+  background: rgba(16, 185, 129, 0.12) !important;
+  border-color: rgba(16, 185, 129, 0.5) !important;
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.2) !important;
+}
+
+.user-sub-badge.has-active-sub #subLiveCountdown {
+  color: #34d399 !important;
+  text-shadow: 0 0 8px rgba(52, 211, 153, 0.5);
+}
+
+.user-sub-badge.is-expired {
+  background: rgba(244, 63, 94, 0.12) !important;
+  border-color: rgba(244, 63, 94, 0.5) !important;
+}
+
+.user-sub-badge.is-expired #subLiveCountdown {
+  color: #fb7185 !important;
+}
+
+.user-profile-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.user-profile-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+}
+
+@media (max-width: 768px) {
+  .user-sub-badge {
+    padding: 3px 8px;
+    font-size: 0.72rem;
+  }
+}
+

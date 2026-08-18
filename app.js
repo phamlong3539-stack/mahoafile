@@ -3659,6 +3659,166 @@ Mã kiểm tra tính toàn vẹn: CVLT-TEST-${Math.random().toString(36).substri
     }
   }
 
+  // ==========================================================================
+  // USER ACCOUNT & ANTI-SHARING SUBSCRIPTION ENGINE
+  // ==========================================================================
+
+  class UserManager {
+    static STORAGE_KEY = 'cvlt_users';
+    static SESSION_KEY = 'cvlt_current_user_session';
+
+    static getUsers() {
+      try {
+        return JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '[]');
+      } catch { return []; }
+    }
+
+    static saveUsers(users) {
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(users));
+    }
+
+    static getCurrentUser() {
+      try {
+        const username = localStorage.getItem(this.SESSION_KEY);
+        if (!username) return null;
+        const users = this.getUsers();
+        return users.find(u => u.username.toLowerCase() === username.toLowerCase()) || null;
+      } catch { return null; }
+    }
+
+    static setCurrentUser(username) {
+      if (username) {
+        localStorage.setItem(this.SESSION_KEY, username);
+      } else {
+        localStorage.removeItem(this.SESSION_KEY);
+      }
+    }
+
+    static register(username, password, displayName) {
+      const u = username.trim();
+      const p = password.trim();
+      const d = (displayName || username).trim();
+
+      if (!u || !p) return { success: false, reason: 'Vui lòng nhập tài khoản và mật khẩu!' };
+      if (u.length < 3) return { success: false, reason: 'Tài khoản phải có ít nhất 3 ký tự!' };
+
+      const users = this.getUsers();
+      if (users.some(x => x.username.toLowerCase() === u.toLowerCase())) {
+        return { success: false, reason: 'Tên tài khoản này đã tồn tại! Vui lòng chọn tên khác.' };
+      }
+
+      const newUser = {
+        id: 'usr_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 5),
+        username: u,
+        password: p,
+        displayName: d,
+        createdAt: new Date().toLocaleString(),
+        activeKey: null,
+        activeKeyLabel: null,
+        subscriptionExpires: null,
+        registeredAt: Date.now()
+      };
+
+      users.push(newUser);
+      this.saveUsers(users);
+      this.setCurrentUser(newUser.username);
+      return { success: true, user: newUser };
+    }
+
+    static login(username, password) {
+      const u = username.trim();
+      const p = password.trim();
+      const users = this.getUsers();
+      const found = users.find(x => x.username.toLowerCase() === u.toLowerCase() && x.password === p);
+
+      if (!found) {
+        return { success: false, reason: 'Sai tên tài khoản hoặc mật khẩu người dùng!' };
+      }
+
+      this.setCurrentUser(found.username);
+      return { success: true, user: found };
+    }
+
+    static logout() {
+      this.setCurrentUser(null);
+    }
+
+    static activateKeyForUser(username, inputKey) {
+      const keys = LicenseKeyManager.getKeys();
+      const normalized = inputKey.trim().toUpperCase();
+      const keyObj = keys.find(k => k.key === normalized);
+
+      if (!keyObj) {
+        return { success: false, reason: 'License Key không tồn tại trên hệ thống!' };
+      }
+      if (keyObj.status === 'suspended') {
+        return { success: false, reason: 'License Key đã bị tạm khóa bởi Admin!' };
+      }
+
+      // ANTI-SHARE / BINDING CHECK:
+      if (keyObj.boundUser && keyObj.boundUser.toLowerCase() !== username.toLowerCase()) {
+        return {
+          success: false,
+          reason: `⚠️ XUNG ĐỘT: Key này đã được kích hoạt và khóa chặt vào tài khoản @${keyObj.boundUser}! Mỗi tài khoản phải dùng Key riêng để tránh dùng chung trái phép.`
+        };
+      }
+
+      const users = this.getUsers();
+      const user = users.find(x => x.username.toLowerCase() === username.toLowerCase());
+      if (!user) {
+        return { success: false, reason: 'Không tìm thấy tài khoản người dùng tương ứng!' };
+      }
+
+      // Calculate duration to add to user subscription
+      let durationMs = 0;
+      let isLifetime = false;
+
+      if (keyObj.durationSpec && typeof keyObj.durationSpec === 'string' && keyObj.durationSpec.endsWith('h')) {
+        const hours = parseFloat(keyObj.durationSpec);
+        durationMs = hours * 3600000;
+      } else {
+        const days = parseFloat(keyObj.durationSpec || keyObj.duration || 1);
+        if (days >= 9999) {
+          isLifetime = true;
+        } else {
+          durationMs = days * 86400000;
+        }
+      }
+
+      const now = Date.now();
+      let newExpiry = null;
+
+      if (isLifetime) {
+        newExpiry = 9999999999999;
+      } else {
+        if (user.subscriptionExpires && user.subscriptionExpires > now && user.subscriptionExpires < 9999999999999) {
+          newExpiry = user.subscriptionExpires + durationMs;
+        } else {
+          newExpiry = now + durationMs;
+        }
+      }
+
+      // Bind key to user
+      keyObj.boundUser = user.username;
+      keyObj.boundDisplayName = user.displayName;
+      keyObj.boundTimestamp = now;
+      LicenseKeyManager.saveKeys(keys);
+
+      // Update user
+      user.activeKey = keyObj.key;
+      user.activeKeyLabel = keyObj.durationLabel;
+      user.subscriptionExpires = newExpiry;
+      this.saveUsers(users);
+
+      return {
+        success: true,
+        user,
+        durationLabel: keyObj.durationLabel,
+        newExpiry
+      };
+    }
+  }
+
   // --- License Key Manager ---
   class LicenseKeyManager {
     static STORAGE_KEY = 'cvlt_license_keys';
@@ -3716,6 +3876,9 @@ Mã kiểm tra tính toàn vẹn: CVLT-TEST-${Math.random().toString(36).substri
         durationLabel,
         createdBy,
         sellerId,
+        boundUser: null, // Bound to User Account upon activation
+        boundDisplayName: null,
+        boundTimestamp: null,
         createdAt: new Date().toLocaleString(),
         createdTimestamp: now,
         expiresAt: expiry ? new Date(expiry).toLocaleString() : 'Không giới hạn',
@@ -4304,22 +4467,218 @@ Mã kiểm tra tính toàn vẹn: CVLT-TEST-${Math.random().toString(36).substri
       });
     }
 
-    // 16. Key Activation (for users)
+    // 16. User Authentication Modal & Ticker Logic
+    const userAuthModal = document.getElementById('userAuthModal');
+    const openUserAuthBtn = document.getElementById('openUserAuthModalBtn');
+    const closeUserAuthBtn = document.getElementById('closeUserAuthModalBtn');
+    const tabUserLoginBtn = document.getElementById('tabUserLoginBtn');
+    const tabUserRegisterBtn = document.getElementById('tabUserRegisterBtn');
+    const userLoginFormFields = document.getElementById('userLoginFormFields');
+    const userRegisterFormFields = document.getElementById('userRegisterFormFields');
+    const userLoggedInProfileView = document.getElementById('userLoggedInProfileView');
+    const userAuthErrorMsg = document.getElementById('userAuthErrorMsg');
+    const userSubmitLoginBtn = document.getElementById('userSubmitLoginBtn');
+    const userSubmitRegisterBtn = document.getElementById('userSubmitRegisterBtn');
+    const userLogoutBtn = document.getElementById('userLogoutBtn');
+    const profileOpenKeyModalBtn = document.getElementById('profileOpenKeyModalBtn');
+
+    let currentUserAuthTab = 'login';
+
+    function renderUserAuthUI() {
+      const curUser = UserManager.getCurrentUser();
+      const userLabel = document.getElementById('userAccountLabel');
+      if (curUser) {
+        if (userLabel) userLabel.textContent = curUser.displayName || curUser.username;
+        if (userLoggedInProfileView) userLoggedInProfileView.style.display = 'block';
+        if (userLoginFormFields) userLoginFormFields.style.display = 'none';
+        if (userRegisterFormFields) userRegisterFormFields.style.display = 'none';
+        const pUser = document.getElementById('profileUsername');
+        const pName = document.getElementById('profileDisplayName');
+        const pKey = document.getElementById('profileActiveKeyCode');
+        if (pUser) pUser.textContent = '@' + curUser.username;
+        if (pName) pName.textContent = curUser.displayName;
+        if (pKey) pKey.textContent = curUser.activeKey ? `${curUser.activeKey} (${curUser.activeKeyLabel || ''})` : 'Chưa kích hoạt key nào';
+      } else {
+        if (userLabel) userLabel.textContent = 'Đăng Nhập / Đăng Ký';
+        if (userLoggedInProfileView) userLoggedInProfileView.style.display = 'none';
+        if (currentUserAuthTab === 'login') {
+          if (userLoginFormFields) userLoginFormFields.style.display = 'block';
+          if (userRegisterFormFields) userRegisterFormFields.style.display = 'none';
+        } else {
+          if (userLoginFormFields) userLoginFormFields.style.display = 'none';
+          if (userRegisterFormFields) userRegisterFormFields.style.display = 'block';
+        }
+      }
+    }
+
+    if (openUserAuthBtn) {
+      openUserAuthBtn.addEventListener('click', () => {
+        sfx.click();
+        if (userAuthErrorMsg) userAuthErrorMsg.style.display = 'none';
+        renderUserAuthUI();
+        if (userAuthModal) userAuthModal.style.display = 'flex';
+      });
+    }
+
+    if (closeUserAuthBtn) {
+      closeUserAuthBtn.addEventListener('click', () => {
+        if (userAuthModal) userAuthModal.style.display = 'none';
+      });
+    }
+
+    if (tabUserLoginBtn && tabUserRegisterBtn) {
+      tabUserLoginBtn.addEventListener('click', () => {
+        currentUserAuthTab = 'login';
+        tabUserLoginBtn.classList.add('active');
+        tabUserLoginBtn.style.background = 'rgba(16, 185, 129, 0.25)';
+        tabUserLoginBtn.style.color = '#fff';
+        tabUserRegisterBtn.classList.remove('active');
+        tabUserRegisterBtn.style.background = 'transparent';
+        tabUserRegisterBtn.style.color = 'var(--text-muted)';
+        renderUserAuthUI();
+      });
+
+      tabUserRegisterBtn.addEventListener('click', () => {
+        currentUserAuthTab = 'register';
+        tabUserRegisterBtn.classList.add('active');
+        tabUserRegisterBtn.style.background = 'rgba(59, 130, 246, 0.25)';
+        tabUserRegisterBtn.style.color = '#fff';
+        tabUserLoginBtn.classList.remove('active');
+        tabUserLoginBtn.style.background = 'transparent';
+        tabUserLoginBtn.style.color = 'var(--text-muted)';
+        renderUserAuthUI();
+      });
+    }
+
+    if (userSubmitLoginBtn) {
+      userSubmitLoginBtn.addEventListener('click', () => {
+        const u = (document.getElementById('loginUserUsername')?.value || '').trim();
+        const p = (document.getElementById('loginUserPassword')?.value || '').trim();
+        const res = UserManager.login(u, p);
+        if (res.success) {
+          sfx.success();
+          if (userAuthErrorMsg) userAuthErrorMsg.style.display = 'none';
+          document.getElementById('loginUserUsername').value = '';
+          document.getElementById('loginUserPassword').value = '';
+          renderUserAuthUI();
+          updateLiveSubscriptionTimer();
+          showToast(`Đăng nhập thành công! Chào mừng ${res.user.displayName}.`, 'success');
+        } else {
+          sfx.error();
+          if (userAuthErrorMsg) {
+            userAuthErrorMsg.textContent = res.reason;
+            userAuthErrorMsg.style.display = 'block';
+          }
+        }
+      });
+    }
+
+    if (userSubmitRegisterBtn) {
+      userSubmitRegisterBtn.addEventListener('click', () => {
+        const d = (document.getElementById('regUserDisplayName')?.value || '').trim();
+        const u = (document.getElementById('regUserUsername')?.value || '').trim();
+        const p = (document.getElementById('regUserPassword')?.value || '').trim();
+        const res = UserManager.register(u, p, d);
+        if (res.success) {
+          sfx.success();
+          if (userAuthErrorMsg) userAuthErrorMsg.style.display = 'none';
+          document.getElementById('regUserDisplayName').value = '';
+          document.getElementById('regUserUsername').value = '';
+          document.getElementById('regUserPassword').value = '';
+          renderUserAuthUI();
+          updateLiveSubscriptionTimer();
+          showToast(`Đăng ký tài khoản @${res.user.username} thành công!`, 'success');
+        } else {
+          sfx.error();
+          if (userAuthErrorMsg) {
+            userAuthErrorMsg.textContent = res.reason;
+            userAuthErrorMsg.style.display = 'block';
+          }
+        }
+      });
+    }
+
+    if (userLogoutBtn) {
+      userLogoutBtn.addEventListener('click', () => {
+        sfx.click();
+        UserManager.logout();
+        renderUserAuthUI();
+        updateLiveSubscriptionTimer();
+        showToast('Đã đăng xuất tài khoản.', 'info');
+      });
+    }
+
+    // 17. Key Activation Modal Events
+    const keyActivationModal = document.getElementById('keyActivationModal');
+    const openKeyDirectBtn = document.getElementById('openActivateKeyDirectBtn');
+    const closeKeyModalBtn = document.getElementById('closeKeyActivationModalBtn');
+
+    const openKeyModalFunc = () => {
+      sfx.click();
+      const curUser = UserManager.getCurrentUser();
+      const uLabel = document.getElementById('keyModalUsernameLabel');
+      const uExp = document.getElementById('keyModalCurrentExpiry');
+
+      if (curUser) {
+        if (uLabel) uLabel.textContent = `@${curUser.username} (${curUser.displayName})`;
+        if (uExp) {
+          if (curUser.subscriptionExpires >= 9999999999999) {
+            uExp.textContent = 'Vĩnh viễn';
+          } else if (curUser.subscriptionExpires && curUser.subscriptionExpires > Date.now()) {
+            uExp.textContent = new Date(curUser.subscriptionExpires).toLocaleString();
+          } else {
+            uExp.textContent = 'Chưa có hạn dùng';
+          }
+        }
+      } else {
+        if (uLabel) uLabel.textContent = 'Khách (Chưa đăng nhập)';
+        if (uExp) uExp.textContent = 'Chưa kích hoạt';
+      }
+
+      if (keyActivationModal) keyActivationModal.style.display = 'flex';
+    };
+
+    if (openKeyDirectBtn) openKeyDirectBtn.addEventListener('click', openKeyModalFunc);
+    if (profileOpenKeyModalBtn) {
+      profileOpenKeyModalBtn.addEventListener('click', () => {
+        if (userAuthModal) userAuthModal.style.display = 'none';
+        openKeyModalFunc();
+      });
+    }
+    if (closeKeyModalBtn) {
+      closeKeyModalBtn.addEventListener('click', () => {
+        if (keyActivationModal) keyActivationModal.style.display = 'none';
+      });
+    }
+
+    // Key Activation Action
     const activateKeyBtn = document.getElementById('activateKeyBtn');
     if (activateKeyBtn) {
       activateKeyBtn.addEventListener('click', () => {
         sfx.click();
-        const inputVal = document.getElementById('keyActivationInput').value.trim();
+        const inputVal = (document.getElementById('keyActivationInput')?.value || '').trim();
         if (!inputVal) {
           showToast('Vui lòng nhập License Key!', 'error');
           return;
         }
-        const result = LicenseKeyManager.validateKey(inputVal);
-        if (result.valid) {
+
+        const curUser = UserManager.getCurrentUser();
+        if (!curUser) {
+          showToast('⚠️ Vui lòng ĐĂNG NHẬP hoặc ĐĂNG KÝ tài khoản trước khi nạp Key để gắn bản quyền vào tài khoản của bạn!', 'error');
+          if (keyActivationModal) keyActivationModal.style.display = 'none';
+          if (userAuthModal) userAuthModal.style.display = 'flex';
+          return;
+        }
+
+        const result = UserManager.activateKeyForUser(curUser.username, inputVal);
+        if (result.success) {
           sfx.success();
-          localStorage.setItem('cvlt_user_active_key', inputVal.toUpperCase());
-          document.getElementById('keyActivationModal').style.display = 'none';
-          showToast('🎉 Kích hoạt Key thành công! Chào mừng bạn sử dụng CipherVault Pro.', 'success');
+          document.getElementById('keyActivationInput').value = '';
+          if (keyActivationModal) keyActivationModal.style.display = 'none';
+          updateLiveSubscriptionTimer();
+          renderUserAuthUI();
+          renderAdminKeyTable();
+          showToast(`🎉 Nạp Key thành công (${result.durationLabel})! Đã khóa bản quyền vào tài khoản @${curUser.username}.`, 'success');
         } else {
           sfx.error();
           showToast(result.reason, 'error');
@@ -4327,7 +4686,82 @@ Mã kiểm tra tính toàn vẹn: CVLT-TEST-${Math.random().toString(36).substri
       });
     }
 
-    // 17. Access Check
+    // 18. Live Subscription Timer Daemon (Realtime Live Countdown)
+    function updateLiveSubscriptionTimer() {
+      const settings = AppSettings.get();
+      const badge = document.getElementById('headerSubBadge');
+      const countEl = document.getElementById('subLiveCountdown');
+      const titleEl = document.getElementById('subBadgeTitle');
+      const profExpEl = document.getElementById('profileExpiryCountdown');
+      const curUser = UserManager.getCurrentUser();
+
+      if (settings.freeMode) {
+        if (titleEl) titleEl.textContent = 'CHẾ ĐỘ HỆ THỐNG';
+        if (countEl) countEl.textContent = '⚡ Miễn Phí (Free Mode)';
+        if (badge) {
+          badge.className = 'user-sub-badge has-active-sub';
+        }
+        if (profExpEl) profExpEl.textContent = 'Đang bật Free Mode (Miễn Phí)';
+        return;
+      }
+
+      if (titleEl) titleEl.textContent = 'THỜI HẠN KEY CỦA BẠN';
+
+      if (!curUser) {
+        if (countEl) countEl.textContent = '🔒 Chưa đăng nhập';
+        if (badge) badge.className = 'user-sub-badge';
+        if (profExpEl) profExpEl.textContent = 'Chưa có Key';
+        return;
+      }
+
+      const exp = curUser.subscriptionExpires;
+      if (!exp) {
+        if (countEl) countEl.textContent = '⚠️ Chưa nạp Key';
+        if (badge) badge.className = 'user-sub-badge is-expired';
+        if (profExpEl) profExpEl.textContent = 'Chưa nạp Key';
+        return;
+      }
+
+      if (exp >= 9999999999999) {
+        if (countEl) countEl.textContent = '♾️ Vĩnh Viễn (Lifetime)';
+        if (badge) badge.className = 'user-sub-badge has-active-sub';
+        if (profExpEl) profExpEl.textContent = 'Vĩnh Viễn (Không giới hạn)';
+        return;
+      }
+
+      const diff = exp - Date.now();
+      if (diff <= 0) {
+        if (countEl) countEl.textContent = '⛔ Đã hết hạn Key';
+        if (badge) badge.className = 'user-sub-badge is-expired';
+        if (profExpEl) profExpEl.textContent = 'Đã hết hạn';
+        return;
+      }
+
+      // Calculate Remaining Time
+      const totalSec = Math.floor(diff / 1000);
+      const days = Math.floor(totalSec / 86400);
+      const hours = Math.floor((totalSec % 86400) / 3600);
+      const mins = Math.floor((totalSec % 3600) / 60);
+      const secs = totalSec % 60;
+
+      const pad = n => n.toString().padStart(2, '0');
+      let countdownStr = '';
+      if (days > 0) {
+        countdownStr = `⏱️ Còn ${days}d ${pad(hours)}h ${pad(mins)}p ${pad(secs)}s`;
+      } else {
+        countdownStr = `⏱️ Còn ${pad(hours)}g ${pad(mins)}p ${pad(secs)}s`;
+      }
+
+      if (countEl) countEl.textContent = countdownStr;
+      if (badge) badge.className = 'user-sub-badge has-active-sub';
+      if (profExpEl) profExpEl.textContent = countdownStr;
+    }
+
+    setInterval(updateLiveSubscriptionTimer, 1000);
+    renderUserAuthUI();
+    updateLiveSubscriptionTimer();
+
+    // 19. Access Check
     checkUserAccess();
   }
 
@@ -4542,14 +4976,14 @@ Mã kiểm tra tính toàn vẹn: CVLT-TEST-${Math.random().toString(36).substri
     }
 
     if (searchVal) {
-      keys = keys.filter(k => k.key.toLowerCase().includes(searchVal) || (k.createdBy && k.createdBy.toLowerCase().includes(searchVal)));
+      keys = keys.filter(k => k.key.toLowerCase().includes(searchVal) || (k.createdBy && k.createdBy.toLowerCase().includes(searchVal)) || (k.boundUser && k.boundUser.toLowerCase().includes(searchVal)));
     }
     if (statusFilter !== 'all') {
       keys = keys.filter(k => LicenseKeyManager.getKeyStatus(k) === statusFilter);
     }
 
     if (keys.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 20px;">Không tìm thấy License Key nào phù hợp.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 20px;">Không tìm thấy License Key nào phù hợp.</td></tr>';
       return;
     }
 
@@ -4561,6 +4995,10 @@ Mã kiểm tra tính toàn vẹn: CVLT-TEST-${Math.random().toString(36).substri
       const toggleText = k.status === 'active' ? 'Khóa' : 'Mở';
       const toggleIcon = k.status === 'active' ? 'fa-ban' : 'fa-check';
 
+      const boundDisplay = k.boundUser
+        ? `<span style="color:#34d399;font-weight:700;font-family:var(--font-mono);"><i class="fa-solid fa-lock"></i> @${k.boundUser}</span>`
+        : '<span style="color:var(--text-muted);font-size:0.75rem;">Chưa kích hoạt</span>';
+
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td class="font-mono" style="font-weight: 700; color: var(--accent-cyan); font-size: 0.82rem;">${k.key}</td>
@@ -4568,6 +5006,7 @@ Mã kiểm tra tính toàn vẹn: CVLT-TEST-${Math.random().toString(36).substri
         <td style="font-size: 0.78rem; color: #c084fc;"><strong>${k.createdBy || 'Root Admin'}</strong></td>
         <td style="font-size: 0.78rem;">${k.createdAt}</td>
         <td style="font-size: 0.78rem;">${k.expiresAt}</td>
+        <td style="font-size: 0.78rem;">${boundDisplay}</td>
         <td class="${statusClass}">${statusLabel}</td>
         <td>
           <button type="button" class="mini-btn copy-key-btn" data-key="${k.key}" title="Sao chép key"><i class="fa-solid fa-copy"></i></button>
@@ -4611,15 +5050,16 @@ Mã kiểm tra tính toàn vẹn: CVLT-TEST-${Math.random().toString(36).substri
     const settings = AppSettings.get();
     if (settings.freeMode) return;
 
-    const savedKey = localStorage.getItem('cvlt_user_active_key');
-    if (savedKey) {
-      const result = LicenseKeyManager.validateKey(savedKey);
-      if (result.valid) return;
-      localStorage.removeItem('cvlt_user_active_key');
+    const curUser = UserManager.getCurrentUser();
+    if (curUser) {
+      if (curUser.subscriptionExpires >= 9999999999999 || (curUser.subscriptionExpires && curUser.subscriptionExpires > Date.now())) {
+        return;
+      }
     }
 
     setTimeout(() => {
-      document.getElementById('keyActivationModal').style.display = 'flex';
+      const modal = document.getElementById('keyActivationModal');
+      if (modal) modal.style.display = 'flex';
     }, 1500);
   }
 
