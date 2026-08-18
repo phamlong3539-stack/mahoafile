@@ -2821,14 +2821,47 @@ Mã kiểm tra tính toàn vẹn: CVLT-TEST-${Math.random().toString(36).substri
 
       for (const file of files) {
         const buffer = await file.arrayBuffer();
-        injectedDylibs.push({
-          name: file.name,
-          bytes: new Uint8Array(buffer),
-          size: file.size
-        });
+        const bytes = new Uint8Array(buffer);
+
+        // Detect if this is a valid Mach-O dylib or an encrypted/unknown blob
+        const isMachO = (
+          (bytes[0] === 0xCE && bytes[1] === 0xFA && bytes[2] === 0xED && bytes[3] === 0xFE) || // 32-bit little-endian
+          (bytes[0] === 0xFE && bytes[1] === 0xED && bytes[2] === 0xFA && bytes[3] === 0xCE) || // 32-bit big-endian
+          (bytes[0] === 0xCF && bytes[1] === 0xFA && bytes[2] === 0xED && bytes[3] === 0xFE) || // 64-bit little-endian
+          (bytes[0] === 0xFE && bytes[1] === 0xED && bytes[2] === 0xFA && bytes[3] === 0xCF) || // 64-bit big-endian
+          (bytes[0] === 0xCA && bytes[1] === 0xFE && bytes[2] === 0xBA && bytes[3] === 0xBE)    // FAT/Universal binary
+        );
+
+        const lowerName = file.name.toLowerCase();
+        const isEncryptedBlob = lowerName.endsWith('.enc') || lowerName.endsWith('.vault') || lowerName.endsWith('.cvlt');
+
+        if (!isMachO) {
+          // File is not a valid Mach-O: bundle as encrypted resource instead
+          injectedDylibs.push({
+            name: file.name,
+            bytes: bytes,
+            size: file.size,
+            mode: 'resource',  // inject into app bundle Documents/Resources, NOT Frameworks
+            warning: isEncryptedBlob
+              ? 'File đã mã hóa — sẽ đặt vào thư mục Resources/ (không thể load như dylib)'
+              : 'Không phải Mach-O hợp lệ — sẽ đặt vào thư mục Resources/ (không thể load như dylib)'
+          });
+          showToast(
+            `⚠️ "${file.name}" không phải Mach-O dylib hợp lệ!\n→ Sẽ nhúng vào Resources/ dưới dạng tài nguyên dữ liệu (không chạy như thư viện).`,
+            'warning'
+          );
+        } else {
+          injectedDylibs.push({
+            name: file.name,
+            bytes: bytes,
+            size: file.size,
+            mode: 'framework',  // inject into Frameworks/ as loadable dylib
+            warning: null
+          });
+        }
       }
       renderDylibList();
-      showToast(`Đã thêm ${files.length} tệp .dylib vào danh sách tiêm!`, 'success');
+      showToast(`Đã thêm ${files.length} tệp vào danh sách tiêm!`, 'success');
       dylibFileInput.value = '';
     });
 
@@ -2837,19 +2870,32 @@ Mã kiểm tra tính toàn vẹn: CVLT-TEST-${Math.random().toString(36).substri
       dylibList.innerHTML = '';
 
       if (injectedDylibs.length === 0) {
-        dylibList.innerHTML = '<div class="dylib-empty-state">Chưa có tệp .dylib nào được thêm.</div>';
+        dylibList.innerHTML = '<div class="dylib-empty-state">Chưa có tệp nào được thêm.</div>';
         return;
       }
 
       injectedDylibs.forEach((dylib, idx) => {
         const item = document.createElement('div');
         item.className = 'dylib-item';
+        const isResource = dylib.mode === 'resource';
+        const iconColor = isResource ? 'var(--accent-amber, #f59e0b)' : 'var(--accent-cyan)';
+        const modeLabel = isResource
+          ? '<span style="font-size:0.68rem; color:#f59e0b; background:rgba(245,158,11,0.15); border:1px solid rgba(245,158,11,0.4); border-radius:4px; padding:1px 5px;">📦 Resource</span>'
+          : '<span style="font-size:0.68rem; color:var(--accent-cyan); background:rgba(0,240,255,0.1); border:1px solid rgba(0,240,255,0.3); border-radius:4px; padding:1px 5px;">⚡ Dylib</span>';
+        const pathDisplay = isResource
+          ? `${dylib.name.split('/').pop().replace(/[.][^.]+$/, '')}.app/Resources/${dylib.name}`
+          : `@rpath/Frameworks/${dylib.name}`;
+        const warningHtml = dylib.warning
+          ? `<div style="color:#f59e0b; font-size:0.7rem; margin-top:3px;"><i class="fa-solid fa-triangle-exclamation"></i> ${dylib.warning}</div>`
+          : '';
+
         item.innerHTML = `
           <div class="dylib-item-left">
-            <i class="fa-solid fa-puzzle-piece" style="color: var(--accent-cyan);"></i>
+            <i class="fa-solid fa-puzzle-piece" style="color:${iconColor};"></i>
             <div>
-              <div class="dylib-name">${dylib.name}</div>
-              <div class="dylib-path">@rpath/Frameworks/${dylib.name} (${formatBytes(dylib.size)})</div>
+              <div class="dylib-name" style="display:flex;align-items:center;gap:6px;">${dylib.name} ${modeLabel}</div>
+              <div class="dylib-path">${pathDisplay} (${formatBytes(dylib.size)})</div>
+              ${warningHtml}
             </div>
           </div>
           <button type="button" class="mini-btn remove-dylib-btn" data-index="${idx}"><i class="fa-solid fa-xmark"></i></button>
@@ -2900,6 +2946,7 @@ Mã kiểm tra tính toàn vẹn: CVLT-TEST-${Math.random().toString(36).substri
 
     // Build Modified IPA
     startBuildBtn.addEventListener('click', async () => {
+      if (!enforceOperationGate()) return;
       if (!loadedIpa) {
         showToast('Vui lòng nạp tệp IPA trước!', 'error');
         return;
@@ -2949,10 +2996,20 @@ Mã kiểm tra tính toàn vẹn: CVLT-TEST-${Math.random().toString(36).substri
           });
         }
 
-        // 3. Inject Dylibs into Frameworks
-        if (injectedDylibs.length > 0) {
-          for (const dylib of injectedDylibs) {
+        // 3. Inject Dylibs or Resources
+        const frameworkDylibs = injectedDylibs.filter(d => d.mode === 'framework');
+        const resourceFiles = injectedDylibs.filter(d => d.mode === 'resource');
+
+        if (frameworkDylibs.length > 0) {
+          for (const dylib of frameworkDylibs) {
             zip.file(`${appDir}Frameworks/${dylib.name}`, dylib.bytes);
+          }
+        }
+
+        if (resourceFiles.length > 0) {
+          for (const res of resourceFiles) {
+            // Bundle encrypted/non-dylib files into Resources/ folder
+            zip.file(`${appDir}Resources/${res.name}`, res.bytes);
           }
         }
 
@@ -2988,8 +3045,10 @@ Mã kiểm tra tính toàn vẹn: CVLT-TEST-${Math.random().toString(36).substri
         progressText.textContent = 'Đóng gói hoàn tất!';
         startBuildBtn.disabled = false;
 
+        const frameworkCount = injectedDylibs.filter(d => d.mode === 'framework').length;
+        const resourceCount = injectedDylibs.filter(d => d.mode === 'resource').length;
         outFileName.textContent = newFileName;
-        outFileSize.textContent = `${formatBytes(outputIpaBlob.size)} (Gốc: ${formatBytes(loadedIpa.originalFileSize)}) • Đã tiêm ${injectedDylibs.length} dylib`;
+        outFileSize.textContent = `${formatBytes(outputIpaBlob.size)} (Gốc: ${formatBytes(loadedIpa.originalFileSize)}) • ${frameworkCount} dylib • ${resourceCount} resource`;
         downloadResultBtn.href = downloadUrl;
         downloadResultBtn.download = newFileName;
 

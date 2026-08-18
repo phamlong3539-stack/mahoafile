@@ -712,13 +712,13 @@
               <!-- Column 2: Dylib Injection (.dylib / Frameworks) -->
               <div class="ipa-card-box">
                 <h4 class="box-section-title"><i class="fa-solid fa-syringe" style="color: var(--accent-cyan);"></i> 2. Nhúng Thư Viện Động (.dylib / Tweak)</h4>
-                <p class="box-subdesc">Thêm các tệp tweak <code>.dylib</code> để tiêm mã thực thi vào ứng dụng.</p>
+                <p class="box-subdesc">Thêm các tệp tweak <code>.dylib</code> để tiêm vào ứng dụng. Hỗ trợ cả <code>.dylib</code> thực thi (Mach-O) và <code>file mã hóa</code> dạng tài nguyên dữ liệu (Resources).</p>
 
                 <!-- Dylib Dropzone -->
                 <div class="file-pick-box" id="dylibDropzone" style="margin-top: 10px;">
-                  <input type="file" id="dylibFileInput" accept=".dylib,.framework,.bin" multiple style="display: none;" />
+                  <input type="file" id="dylibFileInput" multiple style="display: none;" />
                   <i class="fa-solid fa-puzzle-piece" style="color: var(--accent-cyan);"></i>
-                  <span id="dylibDropText">Bấm hoặc kéo thả tệp .dylib vào đây để nhúng</span>
+                  <span id="dylibDropText">Bấm hoặc kéo thả .dylib / file mã hóa (.enc/.vault) vào đây để nhúng</span>
                 </div>
 
                 <!-- Injected Dylibs List -->
