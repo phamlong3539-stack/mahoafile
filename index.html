@@ -1,0 +1,1583 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CipherVault Pro - Cryptographic Web Suite & iOS IPA Sideload Studio (AES-256, RSA-4096, Dylib Injector)</title>
+  <meta name="description" content="Bộ công cụ mật mã học & iOS IPA Sideload Studio 100% Client-Side: Mã hóa AES-256-GCM, RSA-4096, Ký IPA (p12/mobileprovision), Nhúng thư viện .dylib, Tùy biến Bundle ID / App Name, Mach-O DRM Inspector." />
+  
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#07090e" />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="style.css?v=4.3.0" />
+</head>
+<body>
+  <!-- Group Promotion Banner -->
+  <div class="promo-banner" id="promoBanner">
+    <div class="promo-banner-content">
+      <i class="fa-brands fa-telegram" style="font-size: 1.3rem;"></i>
+      <span>🔥 Tham gia nhóm <strong>Telegram Hỗ Trợ</strong> để nhận Key miễn phí & cập nhật phiên bản mới nhất!</span>
+      <a href="#" id="promoBannerLink" class="promo-join-btn" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-right"></i> Tham gia ngay</a>
+    </div>
+    <button type="button" class="promo-close-btn" id="closePromoBanner" title="Đóng">&times;</button>
+  </div>
+
+  <!-- Ambient background glow elements -->
+  <div class="glow-sphere sphere-1"></div>
+  <div class="glow-sphere sphere-2"></div>
+  <div class="glow-sphere sphere-3"></div>
+  <div class="cyber-grid-bg"></div>
+
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="brand-section">
+        <div class="logo-wrapper" id="logoWrapper" title="Nhấn 5 lần liên tục để mở Admin Panel">
+          <div class="logo-icon">
+            <i class="fa-solid fa-shield-halved"></i>
+          </div>
+          <div class="logo-glow"></div>
+        </div>
+        <div class="brand-text">
+          <div class="brand-title-row">
+            <h1 class="brand-title">CIPHER<span>VAULT</span> <span class="pro-tag">PRO</span></h1>
+            <span class="badge-tag">AES-256 & IPA SIDELOAD</span>
+          </div>
+          <p class="brand-subtitle" id="brand-tagline">100% Thuật toán mật mã học thực tế & iOS IPA Studio - Zero-Knowledge trong RAM</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <!-- Direct Admin Panel Button -->
+        <button class="action-quick-btn admin-btn" id="openAdminModalDirectBtn" style="background: rgba(168, 85, 247, 0.15); border-color: rgba(168, 85, 247, 0.4); color: #c084fc;" title="Mở Bảng Quản Trị Admin (freefire10)">
+          <i class="fa-solid fa-user-shield"></i>
+          <span>Admin</span>
+        </button>
+        <!-- Live Proof Test Sandbox Button -->
+        <button class="action-quick-btn live-proof" id="runLiveProofTestBtn" title="Chạy chu trình Mã Hóa ➔ Giải Mã tự động để kiểm chứng thực tế 100%">
+          <i class="fa-solid fa-bolt-lightning"></i>
+          <span data-i18n="liveTestBtn">Kiểm Chứng Chu Trình Live</span>
+        </button>
+        <!-- Generate Sample Test File Button -->
+        <button class="action-quick-btn" id="createSampleDataBtn" title="Tạo tệp dữ liệu mẫu để thử nghiệm nhanh">
+          <i class="fa-solid fa-flask-vial"></i>
+          <span data-i18n="createSample">Tạo Tệp Mẫu</span>
+        </button>
+        <!-- Sound Effect Toggle -->
+        <button class="icon-btn" id="soundToggleBtn" title="Bật/Tắt âm thanh tương tác" aria-label="Toggle Sound">
+          <i class="fa-solid fa-volume-high"></i>
+        </button>
+        <!-- Language Switcher -->
+        <button class="lang-switch-btn" id="langToggleBtn" title="Chuyển đổi ngôn ngữ">
+          <span class="lang-flag">🇻🇳</span>
+          <span class="lang-text" id="currentLangLabel">Tiếng Việt</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="nav-tabs" role="tablist">
+      <button class="tab-btn active" data-tab="tab-files" role="tab" id="nav-tab-files">
+        <i class="fa-solid fa-file-shield"></i>
+        <span class="tab-label" data-i18n="tabFiles">Mã Hóa Tệp Tin (File Vault)</span>
+      </button>
+      <button class="tab-btn" data-tab="tab-text" role="tab" id="nav-tab-text">
+        <i class="fa-solid fa-align-left"></i>
+        <span class="tab-label" data-i18n="tabText">Mã Hóa Văn Bản</span>
+      </button>
+      <button class="tab-btn" data-tab="tab-rsa" role="tab" id="nav-tab-rsa">
+        <i class="fa-solid fa-key"></i>
+        <span class="tab-label" data-i18n="tabRsa">Khóa Bất Đối Xứng RSA</span>
+      </button>
+      <button class="tab-btn" data-tab="tab-stego" role="tab" id="nav-tab-stego">
+        <i class="fa-solid fa-image"></i>
+        <span class="tab-label" data-i18n="tabStego">Giấu Tin Vào Ảnh</span>
+      </button>
+      <button class="tab-btn" data-tab="tab-ipa" role="tab" id="nav-tab-ipa" style="border-color: rgba(0, 240, 255, 0.4); background: rgba(0, 240, 255, 0.04);">
+        <i class="fa-brands fa-apple" style="color: var(--accent-cyan);"></i>
+        <span class="tab-label" data-i18n="tabIpa">iOS IPA Studio</span>
+        <span class="pro-tag" style="background: var(--accent-cyan); color: #000; font-size: 0.62rem; margin-left: 4px;">SIDELOAD</span>
+      </button>
+      <button class="tab-btn" data-tab="tab-hex" role="tab" id="nav-tab-hex">
+        <i class="fa-solid fa-binary"></i>
+        <span class="tab-label" data-i18n="tabHex">Soi Mã Hex / Nhị Phân</span>
+      </button>
+      <button class="tab-btn" data-tab="tab-hash" role="tab" id="nav-tab-hash">
+        <i class="fa-solid fa-fingerprint"></i>
+        <span class="tab-label" data-i18n="tabHash">Hash & Checksum</span>
+      </button>
+      <button class="tab-btn" data-tab="tab-pass" role="tab" id="nav-tab-pass">
+        <i class="fa-solid fa-wand-magic-sparkles"></i>
+        <span class="tab-label" data-i18n="tabPass">Password Studio</span>
+      </button>
+      <button class="tab-btn" data-tab="tab-audit" role="tab" id="nav-tab-audit">
+        <i class="fa-solid fa-clock-rotate-left"></i>
+        <span class="tab-label" data-i18n="tabAudit">Nhật Ký (Audit Log)</span>
+      </button>
+      <button class="tab-btn" data-tab="tab-about" role="tab" id="nav-tab-about">
+        <i class="fa-solid fa-circle-info"></i>
+        <span class="tab-label" data-i18n="tabAbout">Kiến Trúc & Chuẩn</span>
+      </button>
+      <button type="button" class="tab-btn admin-main-nav-tab" id="nav-tab-admin-portal" role="tab" style="background: rgba(168, 85, 247, 0.18); border-color: rgba(168, 85, 247, 0.5); color: #c084fc; font-weight: 700;">
+        <i class="fa-solid fa-user-shield" style="color: #c084fc;"></i>
+        <span class="tab-label">Quản Trị Admin OS</span>
+      </button>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="app-main">
+      
+      <!-- ==================== TAB 1: FILE CRYPTO ==================== -->
+      <section class="tab-pane active" id="tab-files">
+        <div class="mode-selector-wrapper">
+          <div class="mode-selector">
+            <button class="mode-btn active" id="modeEncryptBtn" data-mode="encrypt">
+              <i class="fa-solid fa-lock"></i>
+              <span data-i18n="modeEncrypt">Mã Hóa Tệp (Encrypt)</span>
+            </button>
+            <button class="mode-btn" id="modeDecryptBtn" data-mode="decrypt">
+              <i class="fa-solid fa-lock-open"></i>
+              <span data-i18n="modeDecrypt">Giải Mã Tệp (Decrypt)</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="card glass-card main-crypto-card">
+          <!-- Dropzone -->
+          <div class="dropzone-area" id="fileDropzone">
+            <input type="file" id="fileInput" multiple style="display: none;" />
+            <div class="dropzone-content">
+              <div class="drop-icon-wrapper">
+                <i class="fa-solid fa-cloud-arrow-up" id="dropzoneIcon"></i>
+              </div>
+              <h3 class="drop-title" id="dropzoneTitle">Kéo thả tệp tin vào đây hoặc <span class="highlight-link">chọn từ thiết bị</span></h3>
+              <p class="drop-subtitle" id="dropzoneSubtitle">Hỗ trợ mọi định dạng: Hình ảnh, Video, Tài liệu, Tệp nén, Executable (.exe, .ipa, .zip,...)</p>
+              <div class="security-chip">
+                <i class="fa-solid fa-shield-check"></i>
+                <span data-i18n="zeroKnowledgeBanner">Dữ liệu được xử lý 100% trong RAM máy bạn - Không upload lên server</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Selected Files List -->
+          <div class="files-queue-container" id="filesQueueContainer" style="display: none;">
+            <div class="queue-header">
+              <span class="queue-title"><i class="fa-solid fa-layer-group"></i> <span data-i18n="queueTitle">Danh sách tệp tin đã chọn</span> (<span id="fileCountBadge">0</span>)</span>
+              <button class="text-btn danger" id="clearFilesBtn"><i class="fa-solid fa-trash-can"></i> <span data-i18n="clearAll">Xóa tất cả</span></button>
+            </div>
+            <div class="files-list" id="filesList">
+              <!-- Dynamically populated files -->
+            </div>
+          </div>
+
+          <!-- Authentication Mode: Password vs Key File -->
+          <div class="auth-type-selector">
+            <label class="radio-label">
+              <input type="radio" name="authMode" value="password" checked id="authModePassRadio" />
+              <span><i class="fa-solid fa-key"></i> <span data-i18n="authByPass">Mật khẩu bảo vệ (Master Password)</span></span>
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="authMode" value="keyfile" id="authModeKeyfileRadio" />
+              <span><i class="fa-solid fa-file-shield"></i> <span data-i18n="authByKeyfile">Sử dụng tệp khóa bí mật (.key file)</span></span>
+            </label>
+          </div>
+
+          <!-- Password & Options Section -->
+          <div class="crypto-controls-section">
+            <!-- Password Input Container -->
+            <div class="input-group-container" id="passAuthContainer">
+              <div class="input-label-row">
+                <label for="masterPassword" class="input-label">
+                  <i class="fa-solid fa-vault"></i>
+                  <span data-i18n="passwordLabel">Mật khẩu bảo vệ (Master Key)</span>
+                  <span class="required-star">*</span>
+                </label>
+                <button type="button" class="aux-btn" id="generatePassBtn" title="Tạo mật khẩu ngẫu nhiên siêu mạnh">
+                  <i class="fa-solid fa-wand-magic-sparkles"></i> <span data-i18n="genPassword">Tạo mật khẩu mạnh</span>
+                </button>
+              </div>
+              <div class="password-input-wrapper">
+                <i class="fa-solid fa-key input-prefix-icon"></i>
+                <input type="password" id="masterPassword" class="styled-input" placeholder="Nhập mật khẩu an toàn..." autocomplete="new-password" />
+                <button type="button" class="eye-btn" id="togglePasswordVisibility" title="Hiện/Ẩn mật khẩu">
+                  <i class="fa-regular fa-eye"></i>
+                </button>
+              </div>
+
+              <!-- Password Strength Meter -->
+              <div class="strength-meter-container" id="strengthContainer">
+                <div class="strength-bar-track">
+                  <div class="strength-bar-fill" id="strengthBar"></div>
+                </div>
+                <div class="strength-details">
+                  <span class="strength-label" id="strengthLabel">Độ mạnh: Chưa nhập</span>
+                  <span class="strength-entropy" id="strengthEntropy">0 bits entropy</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Keyfile Auth Container -->
+            <div class="input-group-container" id="keyfileAuthContainer" style="display: none;">
+              <div class="input-label-row">
+                <label class="input-label">
+                  <i class="fa-solid fa-file-code"></i>
+                  <span data-i18n="keyfileLabel">Tệp khóa nhị phân 256-bit (.key)</span>
+                </label>
+                <button type="button" class="aux-btn" id="generateNewKeyfileBtn">
+                  <i class="fa-solid fa-download"></i> <span data-i18n="genKeyfile">Tạo & Tải tệp khóa mới</span>
+                </button>
+              </div>
+              <div class="file-pick-box" id="keyfileDropzone">
+                <input type="file" id="keyfileInput" accept=".key,.bin" style="display: none;" />
+                <i class="fa-solid fa-key"></i>
+                <span id="keyfileStatusText">Bấm vào đây để chọn tệp .key của bạn</span>
+              </div>
+            </div>
+
+            <!-- Advanced Options Accordion -->
+            <div class="advanced-options-accordion">
+              <button type="button" class="accordion-toggle" id="toggleAdvancedOptions">
+                <div class="toggle-left">
+                  <i class="fa-solid fa-sliders"></i>
+                  <span data-i18n="advSettings">Tùy chọn nâng cao (PBKDF2 & Metadata)</span>
+                </div>
+                <i class="fa-solid fa-chevron-down accordion-arrow"></i>
+              </button>
+              <div class="accordion-content" id="advancedOptionsContent">
+                <div class="options-grid">
+                  <div class="option-item">
+                    <label class="option-label" data-i18n="pbkdfIterations">Số vòng lặp PBKDF2 (Iterations):</label>
+                    <select id="pbkdfIterations" class="styled-select">
+                      <option value="100000" selected>100,000 vòng (Chuẩn khuyến nghị OWASP)</option>
+                      <option value="250000">250,000 vòng (Bảo mật tối đa)</option>
+                      <option value="50000">50,000 vòng (Tốc độ cao)</option>
+                    </select>
+                  </div>
+                  <div class="option-item">
+                    <label class="option-label" data-i18n="customExtension">Đuôi mở rộng tệp đã mã hóa:</label>
+                    <input type="text" id="customExtension" class="styled-input small" value=".enc" placeholder=".enc" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Button -->
+            <div class="action-btn-row">
+              <button type="button" class="primary-action-btn" id="startProcessBtn" disabled>
+                <div class="btn-shine"></div>
+                <i class="fa-solid fa-bolt" id="actionBtnIcon"></i>
+                <span id="actionBtnText" data-i18n="startEncryptBtn">BẮT ĐẦU MÃ HÓA</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Progress Bar & Processing State -->
+          <div class="progress-section" id="progressSection" style="display: none;">
+            <div class="progress-info-row">
+              <span class="progress-status-text" id="progressStatusText">Đang khởi tạo thuật toán...</span>
+              <span class="progress-percentage" id="progressPercentage">0%</span>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill" id="progressBarFill"></div>
+            </div>
+          </div>
+
+          <!-- Results Section -->
+          <div class="results-container" id="resultsContainer" style="display: none;">
+            <div class="result-header">
+              <div class="result-success-badge">
+                <i class="fa-solid fa-circle-check"></i>
+                <span id="resultHeadingText">Xử lý thành công!</span>
+              </div>
+              <button class="secondary-btn" id="downloadAllResultsBtn">
+                <i class="fa-solid fa-download"></i> <span data-i18n="downloadAll">Tải tất cả (.zip)</span>
+              </button>
+            </div>
+            <div class="results-list" id="resultsList">
+              <!-- Dynamically populated output cards with Download & Preview buttons -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== TAB 2: TEXT CRYPTO ==================== -->
+      <section class="tab-pane" id="tab-text">
+        <div class="card glass-card">
+          <div class="pane-header">
+            <div>
+              <h2 class="pane-title" data-i18n="textCryptoTitle">Mã Hóa & Giải Mã Tin Nhắn Bí Mật</h2>
+              <p class="pane-desc" data-i18n="textCryptoDesc">Mã hóa chuỗi văn bản hoặc tin nhắn riêng tư thành định dạng Base64/Hex an toàn để gửi qua mạng xã hội, tin nhắn.</p>
+            </div>
+          </div>
+
+          <div class="text-crypto-grid">
+            <!-- Plaintext box -->
+            <div class="crypto-box">
+              <div class="box-header">
+                <label for="plainTextArea" class="box-label"><i class="fa-solid fa-align-left"></i> <span data-i18n="plainText">Văn bản gốc (Plaintext)</span></label>
+                <div class="box-tools">
+                  <span class="char-counter" id="plainCharCount">0 ký tự</span>
+                  <button type="button" class="mini-btn" id="pastePlainBtn" title="Dán từ Clipboard"><i class="fa-regular fa-paste"></i></button>
+                  <button type="button" class="mini-btn" id="clearPlainBtn" title="Xóa nội dung"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+              </div>
+              <textarea id="plainTextArea" class="styled-textarea" rows="7" placeholder="Nhập tin nhắn hoặc nội dung nhạy cảm cần mã hóa..."></textarea>
+            </div>
+
+            <!-- Middle controls -->
+            <div class="text-controls-bar">
+              <div class="text-pass-group">
+                <div class="password-input-wrapper compact">
+                  <i class="fa-solid fa-key input-prefix-icon"></i>
+                  <input type="password" id="textPasswordInput" class="styled-input" placeholder="Mật khẩu mã hóa tin nhắn..." />
+                  <button type="button" class="eye-btn" id="toggleTextPassVisibility"><i class="fa-regular fa-eye"></i></button>
+                </div>
+              </div>
+
+              <div class="text-action-buttons">
+                <button type="button" class="primary-btn pulse" id="encryptTextBtn">
+                  <i class="fa-solid fa-lock"></i> <span data-i18n="encryptText">Mã Hóa ➔</span>
+                </button>
+                <button type="button" class="secondary-btn" id="decryptTextBtn">
+                  <i class="fa-solid fa-lock-open"></i> <span data-i18n="decryptText">⬅ Giải Mã</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Ciphertext box -->
+            <div class="crypto-box">
+              <div class="box-header">
+                <label for="cipherTextArea" class="box-label"><i class="fa-solid fa-shield-virus"></i> <span data-i18n="cipherText">Văn bản đã mã hóa (Ciphertext Base64)</span></label>
+                <div class="box-tools">
+                  <span class="char-counter" id="cipherCharCount">0 ký tự</span>
+                  <button type="button" class="mini-btn" id="qrCipherBtn" title="Tạo mã QR cho văn bản mã hóa"><i class="fa-solid fa-qrcode"></i> QR Code</button>
+                  <button type="button" class="mini-btn copy-btn" id="copyCipherBtn" title="Sao chép Ciphertext"><i class="fa-regular fa-copy"></i> <span data-i18n="copy">Sao chép</span></button>
+                  <button type="button" class="mini-btn" id="clearCipherBtn" title="Xóa"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+              </div>
+              <textarea id="cipherTextArea" class="styled-textarea font-mono" rows="7" placeholder="Nội dung mã hóa Base64 sẽ hiển thị ở đây (hoặc dán ciphertext vào để giải mã)..."></textarea>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== TAB 3: RSA ASYMMETRIC KEYPAIR & DIGITAL SIGNATURE ==================== -->
+      <section class="tab-pane" id="tab-rsa">
+        <div class="card glass-card">
+          <div class="pane-header">
+            <div>
+              <h2 class="pane-title" data-i18n="rsaTitle">RSA-4096 Keypair Studio & Chữ Ký Số (Digital Signature)</h2>
+              <p class="pane-desc" data-i18n="rsaDesc">Sinh cặp khóa Public/Private Key chuẩn PKCS#8/SPKI PEM. Hỗ trợ Mã hóa lai (Hybrid RSA+AES) và Ký số xác thực (Digital Signature RSASSA-PKCS1-v1_5 / SHA-256).</p>
+            </div>
+          </div>
+
+          <!-- RSA Generator Card -->
+          <div class="rsa-generator-bar">
+            <div class="rsa-options-inline">
+              <label class="rsa-label" data-i18n="rsaKeyLength">Độ dài khóa:</label>
+              <select id="rsaKeyLengthSelect" class="styled-select inline">
+                <option value="2048">RSA 2048-bit (Nhanh & An toàn)</option>
+                <option value="4096" selected>RSA 4096-bit (Cực mạnh - Khuyến nghị)</option>
+              </select>
+              <button type="button" class="primary-btn" id="generateRsaKeypairBtn">
+                <i class="fa-solid fa-arrows-rotate"></i> <span data-i18n="generateRsaBtn">Sinh Cặp Khóa Mới</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="rsa-keys-grid">
+            <!-- Public Key Box -->
+            <div class="crypto-box">
+              <div class="box-header">
+                <label class="box-label"><i class="fa-solid fa-globe"></i> <span data-i18n="publicKeyLabel">Khóa Công Khai (Public Key - SPKI PEM)</span></label>
+                <div class="box-tools">
+                  <button type="button" class="mini-btn" id="qrPublicKeyBtn" title="Xem mã QR Public Key"><i class="fa-solid fa-qrcode"></i> QR</button>
+                  <button type="button" class="mini-btn copy-btn" id="copyPublicKeyBtn"><i class="fa-regular fa-copy"></i> Sao chép</button>
+                  <button type="button" class="mini-btn" id="downloadPublicPemBtn"><i class="fa-solid fa-download"></i> .pem</button>
+                </div>
+              </div>
+              <textarea id="publicKeyPemArea" class="styled-textarea font-mono code-box" rows="7" placeholder="-----BEGIN PUBLIC KEY-----&#10;Chưa có khóa... Bấm 'Sinh Cặp Khóa Mới' ở trên hoặc dán Public Key của bạn vào đây&#10;-----END PUBLIC KEY-----"></textarea>
+            </div>
+
+            <!-- Private Key Box -->
+            <div class="crypto-box">
+              <div class="box-header">
+                <label class="box-label"><i class="fa-solid fa-key-skeleton"></i> <span data-i18n="privateKeyLabel">Khóa Bí Mật (Private Key - PKCS#8 PEM)</span></label>
+                <div class="box-tools">
+                  <button type="button" class="mini-btn copy-btn" id="copyPrivateKeyBtn"><i class="fa-regular fa-copy"></i> Sao chép</button>
+                  <button type="button" class="mini-btn" id="downloadPrivatePemBtn"><i class="fa-solid fa-download"></i> .pem</button>
+                </div>
+              </div>
+              <textarea id="privateKeyPemArea" class="styled-textarea font-mono code-box" rows="7" placeholder="-----BEGIN PRIVATE KEY-----&#10;Chưa có khóa... Bấm 'Sinh Cặp Khóa Mới' ở trên hoặc dán Private Key của bạn vào đây&#10;-----END PRIVATE KEY-----"></textarea>
+            </div>
+          </div>
+
+          <!-- Section Tabs: RSA Hybrid Encrypt vs Digital Signature -->
+          <div class="rsa-subtabs-row">
+            <button type="button" class="subtab-btn active" id="rsaSubtabEncryptBtn"><i class="fa-solid fa-shield-halved"></i> Mã Hóa & Giải Mã Lai (Hybrid RSA+AES)</button>
+            <button type="button" class="subtab-btn" id="rsaSubtabSignBtn"><i class="fa-solid fa-signature"></i> Chữ Ký Số & Xác Minh (Signature & Verify)</button>
+          </div>
+
+          <!-- RSA Encrypt / Decrypt Sandbox -->
+          <div class="rsa-sandbox-card" id="rsaEncryptSandbox">
+            <h3 class="verifier-title"><i class="fa-solid fa-envelope-circle-check"></i> Thử nghiệm Mã Hóa & Giải Mã bằng RSA</h3>
+            <div class="rsa-sandbox-grid">
+              <div class="rsa-input-col">
+                <label class="option-label">Nội dung tin nhắn:</label>
+                <textarea id="rsaMessageInput" class="styled-textarea" rows="4" placeholder="Nhập tin nhắn bí mật cần mã hóa với Public Key..."></textarea>
+                <div class="rsa-btn-row">
+                  <button type="button" class="primary-btn" id="rsaEncryptBtn"><i class="fa-solid fa-lock"></i> Mã hóa bằng Public Key</button>
+                </div>
+              </div>
+              <div class="rsa-output-col">
+                <label class="option-label">Kết quả RSA Ciphertext (Base64 Envelope):</label>
+                <textarea id="rsaCipherOutput" class="styled-textarea font-mono" rows="4" placeholder="Ciphertext Base64 sẽ hiển thị ở đây..."></textarea>
+                <div class="rsa-btn-row">
+                  <button type="button" class="secondary-btn" id="rsaDecryptBtn"><i class="fa-solid fa-lock-open"></i> Giải mã bằng Private Key</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- RSA Digital Signature Sandbox -->
+          <div class="rsa-sandbox-card" id="rsaSignatureSandbox" style="display: none;">
+            <h3 class="verifier-title"><i class="fa-solid fa-file-signature"></i> Ký Số Văn Bản & Xác Thực Chữ Ký</h3>
+            <div class="rsa-sandbox-grid">
+              <div class="rsa-input-col">
+                <label class="option-label">Văn bản / Dữ liệu cần ký:</label>
+                <textarea id="rsaSignDataInput" class="styled-textarea" rows="4" placeholder="Nhập nội dung hợp đồng, văn bản hoặc mã băm cần ký xác nhận..."></textarea>
+                <div class="rsa-btn-row">
+                  <button type="button" class="primary-btn" id="rsaExecuteSignBtn"><i class="fa-solid fa-pen-nib"></i> Ký bằng Private Key</button>
+                </div>
+              </div>
+              <div class="rsa-output-col">
+                <label class="option-label">Chữ ký số tạo ra (Digital Signature Base64):</label>
+                <textarea id="rsaSignatureOutput" class="styled-textarea font-mono" rows="4" placeholder="Chữ ký số Base64 xuất hiện ở đây..."></textarea>
+                <div class="rsa-btn-row">
+                  <button type="button" class="secondary-btn" id="rsaExecuteVerifyBtn"><i class="fa-solid fa-stamp"></i> Xác minh bằng Public Key</button>
+                </div>
+              </div>
+            </div>
+            <div class="verify-status" id="rsaSignVerifyStatus" style="display: none; margin-top: 14px;"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== TAB 4: IMAGE STEGANOGRAPHY ==================== -->
+      <section class="tab-pane" id="tab-stego">
+        <div class="card glass-card">
+          <div class="pane-header">
+            <div>
+              <h2 class="pane-title" data-i18n="stegoTitle">Giấu Tin Mật Vào Ảnh (LSB Image Steganography)</h2>
+              <p class="pane-desc" data-i18n="stegoDesc">Nhúng tệp tin hoặc thông điệp đã mã hóa AES-256 vào từng điểm ảnh (Pixel) của tệp ảnh PNG mà mắt thường không thể phân biệt được.</p>
+            </div>
+          </div>
+
+          <div class="mode-selector-wrapper">
+            <div class="mode-selector">
+              <button class="mode-btn active" id="stegoEmbedModeBtn">
+                <i class="fa-solid fa-file-import"></i> <span>Giấu Tin Vào Ảnh (Embed)</span>
+              </button>
+              <button class="mode-btn" id="stegoExtractModeBtn">
+                <i class="fa-solid fa-file-export"></i> <span>Trích Xuất Tin Ẩn (Extract)</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Embed Section -->
+          <div id="stegoEmbedSection">
+            <div class="stego-grid">
+              <div class="stego-carrier-box">
+                <label class="input-label"><i class="fa-solid fa-image"></i> 1. Chọn ảnh mang tin (Carrier Image):</label>
+                <div class="stego-dropzone" id="stegoCarrierDropzone">
+                  <input type="file" id="stegoCarrierInput" accept="image/png,image/jpeg,image/webp" style="display: none;" />
+                  <img id="stegoCarrierPreview" class="stego-preview-img" style="display: none;" alt="Preview" />
+                  <div id="stegoCarrierPlaceholder">
+                    <i class="fa-solid fa-image" style="font-size: 2.2rem; color: var(--accent-cyan); margin-bottom: 8px;"></i>
+                    <p>Kéo thả ảnh nền PNG/JPG vào đây hoặc bấm để chọn</p>
+                  </div>
+                </div>
+                <div class="carrier-capacity-info" id="carrierCapacityText" style="display: none;">Dung lượng tối đa có thể giấu: <strong id="capacityMaxBytes">0 KB</strong></div>
+              </div>
+
+              <div class="stego-payload-box">
+                <div class="stego-type-selector">
+                  <label class="radio-label">
+                    <input type="radio" name="stegoPayloadType" value="text" checked id="stegoTypeRadioText" />
+                    <span><i class="fa-solid fa-font"></i> Giấu chuỗi văn bản</span>
+                  </label>
+                  <label class="radio-label">
+                    <input type="radio" name="stegoPayloadType" value="file" id="stegoTypeRadioFile" />
+                    <span><i class="fa-solid fa-paperclip"></i> Giấu tệp tin bí mật</span>
+                  </label>
+                </div>
+
+                <div id="stegoTextInputWrap">
+                  <label class="input-label"><i class="fa-solid fa-message"></i> 2. Nội dung văn bản cần giấu:</label>
+                  <textarea id="stegoSecretText" class="styled-textarea" rows="4" placeholder="Nhập văn bản bí mật cần nhúng vào ảnh..."></textarea>
+                </div>
+
+                <div id="stegoFileInputWrap" style="display: none;">
+                  <label class="input-label"><i class="fa-solid fa-file-arrow-up"></i> 2. Chọn tệp tin cần giấu:</label>
+                  <div class="file-pick-box" id="stegoSecretFileDropzone">
+                    <input type="file" id="stegoSecretFileInput" style="display: none;" />
+                    <i class="fa-solid fa-file-code"></i>
+                    <span id="stegoSecretFileName">Bấm để chọn tệp tin (hỗ trợ .txt, .key, .enc, file nhỏ)</span>
+                  </div>
+                </div>
+
+                <div class="password-input-wrapper compact" style="margin-top: 12px;">
+                  <i class="fa-solid fa-key input-prefix-icon"></i>
+                  <input type="password" id="stegoPassword" class="styled-input" placeholder="Mật khẩu mã hóa AES cho tin giấu (khuyên dùng)..." />
+                </div>
+                <button type="button" class="primary-action-btn" id="executeStegoEmbedBtn" style="margin-top: 14px;" disabled>
+                  <i class="fa-solid fa-wand-magic-sparkles"></i> NHÚNG TIN VÀO ẢNH & TẢI VỀ
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Extract Section -->
+          <div id="stegoExtractSection" style="display: none;">
+            <div class="stego-grid">
+              <div class="stego-carrier-box">
+                <label class="input-label"><i class="fa-solid fa-file-magnifying-glass"></i> Chọn ảnh PNG đã giấu tin:</label>
+                <div class="stego-dropzone" id="stegoExtractDropzone">
+                  <input type="file" id="stegoExtractInput" accept="image/png" style="display: none;" />
+                  <img id="stegoExtractPreview" class="stego-preview-img" style="display: none;" alt="Stego Image" />
+                  <div id="stegoExtractPlaceholder">
+                    <i class="fa-solid fa-file-image" style="font-size: 2.2rem; color: var(--accent-purple); margin-bottom: 8px;"></i>
+                    <p>Kéo thả ảnh đã giấu tin vào đây</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="stego-payload-box">
+                <label class="input-label"><i class="fa-solid fa-unlock-keyhole"></i> Mật khẩu giải mã tin giấu:</label>
+                <div class="password-input-wrapper compact">
+                  <i class="fa-solid fa-key input-prefix-icon"></i>
+                  <input type="password" id="stegoExtractPassword" class="styled-input" placeholder="Nhập mật khẩu (nếu lúc giấu có đặt)..." />
+                </div>
+                <button type="button" class="primary-action-btn" id="executeStegoExtractBtn" style="margin-top: 14px;">
+                  <i class="fa-solid fa-key"></i> TRÍCH XUẤT DỮ LIỆU ẨN
+                </button>
+                <div class="stego-result-box" id="stegoExtractResultBox" style="display: none; margin-top: 14px;">
+                  <div class="box-header">
+                    <label class="box-label">Kết quả trích xuất:</label>
+                    <div id="stegoExtractActions"></div>
+                  </div>
+                  <textarea id="stegoExtractedTextOutput" class="styled-textarea" rows="4" readonly></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== TAB 5: IOS IPA STUDIO (SIDELOADLY SUITE) ==================== -->
+      <section class="tab-pane" id="tab-ipa">
+        <div class="card glass-card">
+          <div class="pane-header">
+            <div class="pane-header-row" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+              <div>
+                <h2 class="pane-title"><i class="fa-brands fa-apple" style="color: #fff;"></i> iOS IPA Studio & Sideload Signer</h2>
+                <p class="pane-desc">Bộ công cụ tùy biến ứng dụng iOS chuyên nghiệp (Sideloadly Web Engine): Nhúng thư viện .dylib, Đổi Bundle ID/Tên App, Ký số chứng chỉ và Soi DRM Mach-O.</p>
+              </div>
+              <button type="button" class="action-quick-btn" id="ipaCreateSampleBtn" title="Tạo tệp IPA mẫu hoàn chỉnh để thử nghiệm tính năng ngay">
+                <i class="fa-solid fa-flask-vial"></i> Tạo IPA Demo Mẫu
+              </button>
+            </div>
+          </div>
+
+          <!-- IPA Dropzone -->
+          <div class="dropzone-area" id="ipaDropzone">
+            <input type="file" id="ipaFileInput" accept=".ipa,.zip" style="display: none;" />
+            <div class="dropzone-content">
+              <div class="drop-icon-wrapper" style="background: rgba(255, 255, 255, 0.1); color: #fff;">
+                <i class="fa-brands fa-apple" style="font-size: 32px;"></i>
+              </div>
+              <h3 class="drop-title" id="ipaDropTitle">Kéo thả tệp <span class="highlight-link">.ipa</span> vào đây hoặc chọn từ máy tính</h3>
+              <p class="drop-subtitle" id="ipaDropSubtitle">Hỗ trợ các gói ứng dụng iOS (.ipa). Tự động trích xuất Info.plist, Mach-O binary và App Icon.</p>
+            </div>
+          </div>
+
+          <!-- IPA Loaded Workbench Container -->
+          <div class="ipa-workbench" id="ipaWorkbench" style="display: none; margin-top: 20px;">
+            
+            <!-- App Header & Overview Card -->
+            <div class="ipa-overview-card">
+              <div class="ipa-app-header-row">
+                <div class="ipa-icon-box" id="ipaAppIconContainer">
+                  <div class="ipa-default-icon"><i class="fa-brands fa-apple"></i></div>
+                  <img id="ipaAppIconPreview" class="ipa-icon-img" style="display: none;" alt="App Icon" />
+                </div>
+                <div class="ipa-app-details">
+                  <div class="ipa-title-badges">
+                    <h3 class="ipa-app-title" id="ipaAppTitleDisplay">Tên Ứng Dụng</h3>
+                    <span class="ipa-tag-badge" id="ipaArchBadge">arm64</span>
+                    <span class="ipa-tag-badge ipa-drm-tag" id="ipaDrmBadge"><i class="fa-solid fa-shield-check"></i> Decrypted (No DRM)</span>
+                  </div>
+                  <p class="ipa-bundle-text" id="ipaBundleIdDisplay">com.example.app</p>
+                  <p class="ipa-meta-subtext">Executable: <code id="ipaExecutableNameDisplay">AppExecutable</code> • Tệp gốc: <span id="ipaOriginalFileName">app.ipa</span> (<span id="ipaOriginalFileSize">0 MB</span>)</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Customizer Grid -->
+            <div class="ipa-config-grid">
+              
+              <!-- Column 1: App Metadata & Plist Tweaks -->
+              <div class="ipa-card-box">
+                <h4 class="box-section-title"><i class="fa-solid fa-sliders"></i> 1. Tùy Biến Siêu Dữ Liệu Ứng Dụng</h4>
+                
+                <div class="input-item">
+                  <label class="input-label" for="ipaAppNameInput">Tên hiển thị (App Display Name):</label>
+                  <input type="text" id="ipaAppNameInput" class="styled-input" placeholder="Tên ứng dụng trên màn hình chính..." />
+                </div>
+
+                <div class="input-item" style="margin-top: 10px;">
+                  <label class="input-label" for="ipaBundleIdInput">Bundle Identifier (Đổi để cài song song):</label>
+                  <input type="text" id="ipaBundleIdInput" class="styled-input font-mono" placeholder="com.custom.myapp..." />
+                </div>
+
+                <div class="options-grid" style="margin-top: 10px;">
+                  <div>
+                    <label class="input-label" for="ipaVersionInput">Phiên bản (Version):</label>
+                    <input type="text" id="ipaVersionInput" class="styled-input font-mono" placeholder="1.0.0" />
+                  </div>
+                  <div>
+                    <label class="input-label" for="ipaMinOsInput">Minimum iOS:</label>
+                    <input type="text" id="ipaMinOsInput" class="styled-input font-mono" placeholder="14.0" />
+                  </div>
+                </div>
+
+                <div class="checkbox-grid" style="margin-top: 16px;">
+                  <label class="custom-checkbox">
+                    <input type="checkbox" id="ipaTweakFileSharing" checked />
+                    <span class="checkmark"></span>
+                    <span>Bật chia sẻ tệp qua app Files (UIFileSharingEnabled)</span>
+                  </label>
+                  <label class="custom-checkbox">
+                    <input type="checkbox" id="ipaTweakRemovePlugIns" checked />
+                    <span class="checkmark"></span>
+                    <span>Xóa thư mục PlugIns / Extensions (Tránh lỗi giới hạn App ID)</span>
+                  </label>
+                  <label class="custom-checkbox">
+                    <input type="checkbox" id="ipaTweakRemoveWatch" checked />
+                    <span class="checkmark"></span>
+                    <span>Xóa thư mục Watch / WatchKit</span>
+                  </label>
+                  <label class="custom-checkbox">
+                    <input type="checkbox" id="ipaTweakAntiTamper" checked />
+                    <span class="checkmark"></span>
+                    <span style="color: var(--accent-cyan); font-weight: 600;"><i class="fa-solid fa-shield-halved"></i> Khóa gỡ lỗi get-task-allow = false (Chống Frida/LLDB/Cycript)</span>
+                  </label>
+                  <label class="custom-checkbox">
+                    <input type="checkbox" id="ipaTweakIntegritySeal" checked />
+                    <span class="checkmark"></span>
+                    <span style="color: var(--accent-emerald); font-weight: 600;"><i class="fa-solid fa-stamp"></i> Đóng dấu niêm phong bản quyền số chống Fake App (Integrity Seal)</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Column 2: Dylib Injection (.dylib / Frameworks) -->
+              <div class="ipa-card-box">
+                <h4 class="box-section-title"><i class="fa-solid fa-syringe" style="color: var(--accent-cyan);"></i> 2. Nhúng Thư Viện Động (.dylib / Tweak)</h4>
+                <p class="box-subdesc">Thêm các tệp tweak <code>.dylib</code> để tiêm mã thực thi vào ứng dụng.</p>
+
+                <!-- Dylib Dropzone -->
+                <div class="file-pick-box" id="dylibDropzone" style="margin-top: 10px;">
+                  <input type="file" id="dylibFileInput" accept=".dylib,.framework,.bin" multiple style="display: none;" />
+                  <i class="fa-solid fa-puzzle-piece" style="color: var(--accent-cyan);"></i>
+                  <span id="dylibDropText">Bấm hoặc kéo thả tệp .dylib vào đây để nhúng</span>
+                </div>
+
+                <!-- Injected Dylibs List -->
+                <div class="dylib-list-container" id="dylibListContainer">
+                  <div class="dylib-list-header">
+                    <span>Danh sách dylib sẽ tiêm (<strong id="dylibCountBadge">0</strong>)</span>
+                  </div>
+                  <div class="dylib-list" id="dylibList">
+                    <div class="dylib-empty-state">Chưa có tệp .dylib nào được thêm.</div>
+                  </div>
+                </div>
+
+                <!-- Load command option -->
+                <div style="margin-top: 14px;">
+                  <label class="custom-checkbox">
+                    <input type="checkbox" id="ipaAutoInjectRpath" checked />
+                    <span class="checkmark"></span>
+                    <span>Tự động nạp qua <code>@rpath / Frameworks</code></span>
+                  </label>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Signing & Certificate Section -->
+            <div class="ipa-card-box" style="margin-top: 20px;">
+              <h4 class="box-section-title"><i class="fa-solid fa-signature" style="color: var(--accent-emerald);"></i> 3. Cấu Hình Ký Số (iOS Code Signing)</h4>
+              
+              <div class="auth-type-selector" style="margin-top: 10px; border-bottom: none;">
+                <label class="radio-label">
+                  <input type="radio" name="ipaSignMode" value="adhoc" checked id="ipaSignAdhocRadio" />
+                  <span><i class="fa-solid fa-certificate"></i> Ad-Hoc / FakeSign (Dành cho TrollStore / AltStore / Sideloadly)</span>
+                </label>
+                <label class="radio-label">
+                  <input type="radio" name="ipaSignMode" value="custom" id="ipaSignCustomRadio" />
+                  <span><i class="fa-solid fa-file-shield"></i> Dùng Chứng Chỉ Nhà Phát Triển (.p12 + .mobileprovision)</span>
+                </label>
+              </div>
+
+              <!-- Custom Cert Upload Inputs -->
+              <div id="ipaCustomCertInputs" style="display: none; margin-top: 14px;">
+                <div class="options-grid">
+                  <div class="file-pick-box" id="p12Dropzone">
+                    <input type="file" id="p12FileInput" accept=".p12,.pfx" style="display: none;" />
+                    <i class="fa-solid fa-key"></i>
+                    <span id="p12StatusText">Chọn tệp chứng chỉ .p12</span>
+                  </div>
+                  <div class="file-pick-box" id="provDropzone">
+                    <input type="file" id="provFileInput" accept=".mobileprovision" style="display: none;" />
+                    <i class="fa-solid fa-id-card"></i>
+                    <span id="provStatusText">Chọn tệp .mobileprovision</span>
+                  </div>
+                </div>
+                <div class="password-input-wrapper compact" style="margin-top: 10px;">
+                  <i class="fa-solid fa-lock input-prefix-icon"></i>
+                  <input type="password" id="p12PasswordInput" class="styled-input" placeholder="Mật khẩu tệp .p12 (nếu có)..." />
+                </div>
+              </div>
+            </div>
+
+            <!-- Build Progress Bar & Action Button -->
+            <div class="ipa-action-section" style="margin-top: 20px;">
+              <div class="progress-section" id="ipaProgressSection" style="display: none;">
+                <div class="progress-info-row">
+                  <span class="progress-status-text" id="ipaProgressText">Đang đóng gói lại ứng dụng...</span>
+                  <span class="progress-percentage" id="ipaProgressPercent">0%</span>
+                </div>
+                <div class="progress-track">
+                  <div class="progress-fill" id="ipaProgressBarFill"></div>
+                </div>
+              </div>
+
+              <div class="action-btn-row">
+                <button type="button" class="primary-action-btn" id="startIpaBuildBtn">
+                  <div class="btn-shine"></div>
+                  <i class="fa-solid fa-box-archive"></i>
+                  <span>ĐÓNG GÓI & TẢI VỀ IPA ĐÃ TÙY BIẾN</span>
+                </button>
+              </div>
+
+              <!-- IPA Output Result Box -->
+              <div class="results-container" id="ipaResultContainer" style="display: none; margin-top: 16px;">
+                <div class="result-card">
+                  <div class="result-card-info">
+                    <i class="fa-brands fa-apple result-file-icon" style="color: var(--accent-cyan);"></i>
+                    <div class="result-details">
+                      <span class="result-filename" id="ipaOutputFileName">Modified_App.ipa</span>
+                      <span class="file-size" id="ipaOutputFileSize">0 MB</span>
+                      <span style="color: var(--accent-emerald); font-size: 0.78rem; margin-top: 2px;">
+                        <i class="fa-solid fa-circle-check"></i> Đã tiêm Dylib, cập nhật Info.plist và ký số thành công!
+                      </span>
+                    </div>
+                  </div>
+                  <div class="result-actions">
+                    <a href="#" id="ipaDownloadResultBtn" class="primary-btn">
+                      <i class="fa-solid fa-download"></i> Tải về IPA
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== TAB 6: HEX & BYTE INSPECTOR ==================== -->
+      <section class="tab-pane" id="tab-hex">
+        <div class="card glass-card">
+          <div class="pane-header">
+            <div>
+              <h2 class="pane-title" data-i18n="hexTitle">Trình Soi Dữ Liệu Nhị Phân (Live Hex & Byte Inspector)</h2>
+              <p class="pane-desc" data-i18n="hexDesc">Khám phá từng byte dữ liệu (Offset, Hex View, ASCII) của tệp tin hoặc chuỗi văn bản bất kỳ theo thời gian thực.</p>
+            </div>
+          </div>
+
+          <div class="hex-top-bar">
+            <div class="hex-btn-group">
+              <button type="button" class="secondary-btn" id="hexUploadFileBtn">
+                <i class="fa-solid fa-file-import"></i> Nạp tệp bất kỳ
+              </button>
+              <input type="file" id="hexFileInput" style="display: none;" />
+              <button type="button" class="secondary-btn" id="hexSampleTextBtn">
+                <i class="fa-solid fa-font"></i> Nạp chuỗi mẫu
+              </button>
+            </div>
+            <div class="hex-input-wrap">
+              <input type="text" id="hexLiveTextInput" class="styled-input" placeholder="Hoặc gõ/dán văn bản trực tiếp vào đây để soi byte ngay..." />
+            </div>
+            <span class="hex-file-info" id="hexFileInfoText">Chưa nạp dữ liệu</span>
+          </div>
+
+          <div class="hex-viewer-container font-mono">
+            <div class="hex-header-row">
+              <span class="hex-col-offset">OFFSET</span>
+              <span class="hex-col-bytes">00 01 02 03 04 05 06 07  08 09 0A 0B 0C 0D 0E 0F</span>
+              <span class="hex-col-ascii">DECODED ASCII</span>
+            </div>
+            <div class="hex-body" id="hexViewerBody">
+              <div class="hex-empty-state">Nhấn "Nạp tệp bất kỳ", "Nạp chuỗi mẫu" hoặc nhập văn bản ở trên để bắt đầu soi mã byte nhị phân.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== TAB 7: HASH & CHECKSUM & HMAC ==================== -->
+      <section class="tab-pane" id="tab-hash">
+        <div class="card glass-card">
+          <div class="pane-header">
+            <div>
+              <h2 class="pane-title" data-i18n="hashTitle">Trình Tạo Băm & Toàn Vẹn Dữ Liệu (Hash, HMAC, CRC-32)</h2>
+              <p class="pane-desc" data-i18n="hashDesc">Tính toán mã băm SHA-256, SHA-512, SHA-384, SHA-1, HMAC có khóa bảo mật và CRC-32 của tệp tin hoặc chuỗi ký tự.</p>
+            </div>
+          </div>
+
+          <div class="hash-input-selector">
+            <div class="hash-dropzone" id="hashDropzone">
+              <input type="file" id="hashFileInput" style="display: none;" />
+              <i class="fa-solid fa-file-lines hash-drop-icon"></i>
+              <p class="hash-drop-text" id="hashDropText">Kéo thả tệp vào đây để tính mã Hash Checksum</p>
+            </div>
+          </div>
+
+          <div class="hash-text-input-wrap">
+            <label class="input-label" for="hashTextInput"><i class="fa-solid fa-pen-nib"></i> <span data-i18n="orHashText">Hoặc nhập văn bản cần băm:</span></label>
+            <input type="text" id="hashTextInput" class="styled-input" placeholder="Nhập văn bản bất kỳ để tính hash tức thì..." />
+          </div>
+
+          <!-- HMAC Key Option -->
+          <div class="hmac-key-wrap">
+            <label class="input-label" for="hmacSecretKey"><i class="fa-solid fa-key"></i> Khóa bí mật HMAC (Tùy chọn - nếu muốn sinh HMAC xác thực):</label>
+            <input type="text" id="hmacSecretKey" class="styled-input" placeholder="Nhập secret key để tạo HMAC-SHA256 & HMAC-SHA512..." />
+          </div>
+
+          <div class="hash-results-grid" id="hashResultsGrid">
+            <!-- SHA-256 -->
+            <div class="hash-card">
+              <div class="hash-card-header">
+                <span class="hash-algo-badge sha256">SHA-256 (Khuyến nghị)</span>
+                <button type="button" class="mini-btn copy-btn" data-copy-target="hashSha256"><i class="fa-regular fa-copy"></i></button>
+              </div>
+              <div class="hash-val-display font-mono" id="hashSha256">Chưa có dữ liệu</div>
+            </div>
+
+            <!-- SHA-512 -->
+            <div class="hash-card">
+              <div class="hash-card-header">
+                <span class="hash-algo-badge sha512">SHA-512 (Bảo mật tối đa)</span>
+                <button type="button" class="mini-btn copy-btn" data-copy-target="hashSha512"><i class="fa-regular fa-copy"></i></button>
+              </div>
+              <div class="hash-val-display font-mono" id="hashSha512">Chưa có dữ liệu</div>
+            </div>
+
+            <!-- HMAC-SHA256 -->
+            <div class="hash-card">
+              <div class="hash-card-header">
+                <span class="hash-algo-badge hmac">HMAC-SHA256 (Khóa xác thực)</span>
+                <button type="button" class="mini-btn copy-btn" data-copy-target="hashHmacSha256"><i class="fa-regular fa-copy"></i></button>
+              </div>
+              <div class="hash-val-display font-mono" id="hashHmacSha256">Chưa có dữ liệu</div>
+            </div>
+
+            <!-- CRC-32 -->
+            <div class="hash-card">
+              <div class="hash-card-header">
+                <span class="hash-algo-badge crc">CRC-32 (Kiểm tra truyền tải)</span>
+                <button type="button" class="mini-btn copy-btn" data-copy-target="hashCrc32"><i class="fa-regular fa-copy"></i></button>
+              </div>
+              <div class="hash-val-display font-mono" id="hashCrc32">Chưa có dữ liệu</div>
+            </div>
+          </div>
+
+          <!-- Hash Comparison Tool -->
+          <div class="hash-verifier-box">
+            <h3 class="verifier-title"><i class="fa-solid fa-code-compare"></i> <span data-i18n="verifyHashTitle">Đối chiếu mã băm (Verify Hash)</span></h3>
+            <div class="verifier-input-row">
+              <input type="text" id="expectedHashInput" class="styled-input font-mono" placeholder="Dán mã Hash bạn muốn đối chiếu vào đây (ví dụ: SHA-256 do nhà cung cấp công bố)..." />
+              <button type="button" class="secondary-btn" id="compareHashBtn"><i class="fa-solid fa-check-double"></i> <span data-i18n="checkMatch">Kiểm tra</span></button>
+            </div>
+            <div class="verify-status" id="verifyStatusBox" style="display: none;"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== TAB 8: PASSWORD & KEY STUDIO ==================== -->
+      <section class="tab-pane" id="tab-pass">
+        <div class="card glass-card">
+          <div class="pane-header">
+            <div>
+              <h2 class="pane-title">Password & Master Key Generator Studio</h2>
+              <p class="pane-desc">Bộ công cụ tạo mật khẩu quân sự ngẫu nhiên chuẩn Web Crypto CSPRNG với phân tích Entropy và ước tính thời gian bẻ khóa.</p>
+            </div>
+          </div>
+
+          <div class="pass-studio-grid">
+            <!-- Output Display Box -->
+            <div class="pass-display-card">
+              <div class="pass-result-wrapper">
+                <input type="text" id="studioPassOutput" class="pass-result-input font-mono" readonly value="" placeholder="Mật khẩu sẽ xuất hiện ở đây..." />
+                <button type="button" class="icon-btn-highlight" id="studioCopyPassBtn" title="Sao chép mật khẩu"><i class="fa-regular fa-copy"></i></button>
+                <button type="button" class="icon-btn-highlight" id="studioQrPassBtn" title="Xem mã QR mật khẩu"><i class="fa-solid fa-qrcode"></i></button>
+                <button type="button" class="icon-btn-highlight refresh" id="studioRegenPassBtn" title="Sinh mật khẩu mới"><i class="fa-solid fa-rotate"></i></button>
+              </div>
+
+              <!-- Live Strength & Crack Time Gauge -->
+              <div class="pass-gauge-box">
+                <div class="gauge-row">
+                  <div class="gauge-col">
+                    <span class="gauge-label">Entropy Độ Mạnh</span>
+                    <strong class="gauge-val" id="studioEntropyVal">0 Bits</strong>
+                  </div>
+                  <div class="gauge-col">
+                    <span class="gauge-label">Độ Phức Tạp</span>
+                    <strong class="gauge-val" id="studioQualityVal">Chưa có</strong>
+                  </div>
+                  <div class="gauge-col">
+                    <span class="gauge-label">Ước Tính Bẻ Khóa</span>
+                    <strong class="gauge-val" id="studioCrackTimeVal">Tức thì</strong>
+                  </div>
+                </div>
+                <div class="strength-bar-track" style="margin-top: 12px;">
+                  <div class="strength-bar-fill" id="studioStrengthBar" style="width: 0%;"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Configuration Options -->
+            <div class="pass-options-card">
+              <div class="option-slider-row">
+                <div class="slider-header">
+                  <label for="studioPassLength">Độ dài mật khẩu:</label>
+                  <span class="slider-val-badge" id="studioPassLengthBadge">24 ký tự</span>
+                </div>
+                <input type="range" id="studioPassLength" min="8" max="64" value="24" class="styled-range" />
+              </div>
+
+              <div class="checkbox-grid">
+                <label class="custom-checkbox">
+                  <input type="checkbox" id="passOptUpper" checked />
+                  <span class="checkmark"></span>
+                  <span>Chữ hoa (A-Z)</span>
+                </label>
+                <label class="custom-checkbox">
+                  <input type="checkbox" id="passOptLower" checked />
+                  <span class="checkmark"></span>
+                  <span>Chữ thường (a-z)</span>
+                </label>
+                <label class="custom-checkbox">
+                  <input type="checkbox" id="passOptNumbers" checked />
+                  <span class="checkmark"></span>
+                  <span>Chữ số (0-9)</span>
+                </label>
+                <label class="custom-checkbox">
+                  <input type="checkbox" id="passOptSymbols" checked />
+                  <span class="checkmark"></span>
+                  <span>Ký tự đặc biệt (!@#$%^&*...)</span>
+                </label>
+                <label class="custom-checkbox">
+                  <input type="checkbox" id="passOptExcludeAmbiguous" checked />
+                  <span class="checkmark"></span>
+                  <span>Tránh ký tự dễ nhầm (0, O, 1, l, I)</span>
+                </label>
+                <label class="custom-checkbox">
+                  <input type="checkbox" id="passOptPassphrase" />
+                  <span class="checkmark"></span>
+                  <span>Cụm mật khẩu từ ngẫu nhiên (Passphrase)</span>
+                </label>
+              </div>
+
+              <div class="quick-pass-presets">
+                <span class="preset-label">Mẫu nhanh:</span>
+                <button type="button" class="pill-preset" data-length="16">16 Ký tự</button>
+                <button type="button" class="pill-preset" data-length="24">24 Ký tự (Chuẩn)</button>
+                <button type="button" class="pill-preset" data-length="32">32 Ký tự (Siêu mạnh)</button>
+                <button type="button" class="pill-preset" data-length="48">48 Ký tự (Quân sự)</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== TAB 9: AUDIT LOG & HISTORY ==================== -->
+      <section class="tab-pane" id="tab-audit">
+        <div class="card glass-card">
+          <div class="pane-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+            <div>
+              <h2 class="pane-title" data-i18n="auditTitle">Nhật Ký Phiên Làm Việc (Audit History)</h2>
+              <p class="pane-desc" data-i18n="auditDesc">Lịch sử các thao tác mã hóa/giải mã được lưu trữ an toàn trong bộ nhớ máy của bạn.</p>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button type="button" class="secondary-btn" id="exportAuditJsonBtn"><i class="fa-solid fa-file-code"></i> Xuất JSON</button>
+              <button type="button" class="text-btn danger" id="clearAuditLogBtn"><i class="fa-solid fa-trash"></i> Xóa lịch sử</button>
+            </div>
+          </div>
+
+          <div class="audit-table-wrapper">
+            <table class="audit-table">
+              <thead>
+                <tr>
+                  <th>Thời gian</th>
+                  <th>Hành động</th>
+                  <th>Tên tệp / Đối tượng</th>
+                  <th>Kích thước</th>
+                  <th>Trạng thái</th>
+                  <th>Mã Hash SHA-256</th>
+                </tr>
+              </thead>
+              <tbody id="auditTableBody">
+                <!-- Dynamically populated rows -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== TAB 10: ARCHITECTURE & SPECS ==================== -->
+      <section class="tab-pane" id="tab-about">
+        <div class="card glass-card specs-card">
+          <div class="pane-header">
+            <h2 class="pane-title" data-i18n="specsTitle">Kiến Trúc & Chuẩn Bảo Mật</h2>
+            <p class="pane-desc" data-i18n="specsDesc">Tìm hiểu cách CipherVault bảo vệ dữ liệu của bạn bằng các thuật toán mã hóa hiện đại nhất.</p>
+          </div>
+
+          <div class="specs-grid">
+            <div class="spec-box">
+              <div class="spec-icon-row">
+                <i class="fa-solid fa-lock-open"></i>
+                <span class="spec-tag">Thuật toán</span>
+              </div>
+              <h3 class="spec-name">AES-256-GCM</h3>
+              <p class="spec-desc">Chuẩn mã hóa khối nâng cao với Galois/Counter Mode. Cung cấp cả tính <strong>Bảo mật (Confidentiality)</strong> lẫn <strong>Xác thực toàn vẹn (Authenticity)</strong> thông qua thẻ xác thực 128-bit.</p>
+            </div>
+
+            <div class="spec-box">
+              <div class="spec-icon-row">
+                <i class="fa-solid fa-fingerprint"></i>
+                <span class="spec-tag">KDF</span>
+              </div>
+              <h3 class="spec-name">PBKDF2 (SHA-256)</h3>
+              <p class="spec-desc">Chuyển đổi mật khẩu thành khóa mã hóa 256-bit thông qua 100,000+ vòng lặp HMAC-SHA256 kết hợp 16 bytes Salt ngẫu nhiên nhằm ngăn chặn tấn công Rainbow Tables và Brute-force.</p>
+            </div>
+
+            <div class="spec-box">
+              <div class="spec-icon-row">
+                <i class="fa-solid fa-key"></i>
+                <span class="spec-tag">Asymmetric</span>
+              </div>
+              <h3 class="spec-name">RSA-OAEP 4096-bit</h3>
+              <p class="spec-desc">Thuật toán mã hóa khóa công khai mạnh nhất hiện nay với đệm tối ưu Optimal Asymmetric Encryption Padding (OAEP) chống lại các cuộc tấn công Chosen-Ciphertext.</p>
+            </div>
+
+            <div class="spec-box">
+              <div class="spec-icon-row">
+                <i class="fa-brands fa-apple"></i>
+                <span class="spec-tag">iOS Sideload</span>
+              </div>
+              <h3 class="spec-name">Mach-O Dylib Injection</h3>
+              <p class="spec-desc">Hỗ trợ đọc Mach-O 64-bit headers, kiểm tra trạng thái Apple FairPlay DRM cryptid, tiêm dylib qua <code>@rpath</code> và tái tạo manifest <code>CodeResources</code>.</p>
+            </div>
+          </div>
+
+          <div class="binary-structure-card">
+            <h3 class="bin-struct-title"><i class="fa-solid fa-cubes-stacked"></i> Cấu Trúc Định Dạng Tệp Đã Mã Hóa (.enc)</h3>
+            <div class="bin-blocks-diagram">
+              <div class="bin-block block-magic">
+                <span class="bin-label">Header Magic</span>
+                <span class="bin-bytes">4 Bytes ("CVLT")</span>
+              </div>
+              <div class="bin-block block-salt">
+                <span class="bin-label">Random Salt</span>
+                <span class="bin-bytes">16 Bytes</span>
+              </div>
+              <div class="bin-block block-iv">
+                <span class="bin-label">GCM IV</span>
+                <span class="bin-bytes">12 Bytes</span>
+              </div>
+              <div class="bin-block block-meta">
+                <span class="bin-label">Original Filename & Metadata Length</span>
+                <span class="bin-bytes">2 Bytes</span>
+              </div>
+              <div class="bin-block block-payload">
+                <span class="bin-label">AES-GCM Encrypted Payload + 16-Byte Auth Tag</span>
+                <span class="bin-bytes">N Bytes (Ciphertext)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <div class="footer-content">
+        <div class="footer-left">
+          <i class="fa-solid fa-shield-cat"></i>
+          <span>CipherVault Pro Open-Source Cryptographic & iOS Sideload Suite</span>
+        </div>
+        <div class="footer-right" style="display: flex; gap: 14px; align-items: center; flex-wrap: wrap;">
+          <span class="security-status-indicator" style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3);">
+            <span class="status-dot online"></span>
+            <span id="antiTamperStatus"><i class="fa-solid fa-shield-halved" style="color: var(--accent-emerald);"></i> Anti-Tamper: Bảo vệ 100%</span>
+          </span>
+          <span class="security-status-indicator">
+            <span class="status-dot online"></span>
+            <span id="cryptoApiStatus">Web Cryptography API: Sẵn sàng</span>
+          </span>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Live Test Proof Modal -->
+  <div class="modal-backdrop" id="liveProofModal" style="display: none;">
+    <div class="modal-content glass-card large-modal">
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="fa-solid fa-bolt-lightning" style="color: var(--accent-cyan);"></i> Kiểm Chứng Chu Trình Mã Hóa Thực Tế (Live Cryptographic Proof)</h3>
+        <button type="button" class="modal-close-btn" id="closeLiveProofModal">&times;</button>
+      </div>
+      <div class="modal-body" id="liveProofModalBody">
+        <!-- Interactive animated proof rendered via JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Decrypted File Content Preview Modal -->
+  <div class="modal-backdrop" id="previewModal" style="display: none;">
+    <div class="modal-content glass-card large-modal">
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="fa-solid fa-eye" style="color: var(--accent-emerald);"></i> Xem Trực Tiếp Tệp Đã Giải Mã (Live Decrypted Preview)</h3>
+        <button type="button" class="modal-close-btn" id="closePreviewModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="preview-meta-bar" id="previewMetaBar"></div>
+        <div class="preview-display-box" id="previewDisplayBox"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QR Code Modal -->
+  <div class="modal-backdrop" id="qrModal" style="display: none;">
+    <div class="modal-content glass-card qr-modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="fa-solid fa-qrcode" style="color: var(--accent-cyan);"></i> Mã QR Dữ Liệu Bảo Mật</h3>
+        <button type="button" class="modal-close-btn" id="closeQrModal">&times;</button>
+      </div>
+      <div class="modal-body qr-modal-body">
+        <div class="qr-code-render-wrap" id="qrCodeContainer"></div>
+        <p class="qr-caption" id="qrCaptionText">Quét bằng điện thoại để nhận dữ liệu an toàn offline</p>
+        <button type="button" class="secondary-btn" id="downloadQrPngBtn"><i class="fa-solid fa-download"></i> Tải ảnh QR (.png)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden canvas for image steganography -->
+  <canvas id="stegoCanvas" style="display: none;"></canvas>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Floating Telegram Contact Button -->
+  <a href="#" id="telegramFab" class="telegram-fab" target="_blank" rel="noopener" title="Liên hệ hỗ trợ qua Telegram">
+    <i class="fa-brands fa-telegram"></i>
+    <span class="fab-tooltip">Liên hệ hỗ trợ</span>
+  </a>
+
+  <!-- Key Activation Modal (shown when Free Mode is OFF and user has no valid key) -->
+  <div class="modal-backdrop" id="keyActivationModal" style="display: none;">
+    <div class="modal-content glass-card" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="fa-solid fa-key" style="color: var(--accent-amber);"></i> Kích Hoạt Bản Quyền (License Key)</h3>
+      </div>
+      <div class="modal-body" style="text-align: center;">
+        <p style="color: var(--text-secondary); margin-bottom: 16px;">Nhập Key bản quyền để sử dụng đầy đủ tính năng CipherVault Pro. <br/><strong style="color: var(--accent-cyan);">Liên hệ Admin qua Telegram để nhận Key!</strong></p>
+        <div class="password-input-wrapper compact" style="margin-bottom: 14px;">
+          <i class="fa-solid fa-key input-prefix-icon"></i>
+          <input type="text" id="keyActivationInput" class="styled-input font-mono" placeholder="CVLT-XXXX-XXXX-XXXX-XXXX" style="text-transform: uppercase; letter-spacing: 1px;" />
+        </div>
+        <button type="button" class="primary-action-btn" id="activateKeyBtn" style="width: 100%;">
+          <i class="fa-solid fa-unlock"></i> KÍCH HOẠT KEY
+        </button>
+        <div style="margin-top: 14px;">
+          <a href="#" id="keyModalTelegramLink" target="_blank" rel="noopener" style="color: var(--accent-cyan); font-size: 0.85rem;"><i class="fa-brands fa-telegram"></i> Liên hệ Admin nhận Key miễn phí</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin & Seller Portal Login Modal -->
+  <div class="modal-backdrop" id="adminLoginModal" style="display: none;">
+    <div class="modal-content glass-card" style="max-width: 460px; border: 1px solid rgba(168, 85, 247, 0.4); box-shadow: 0 10px 40px rgba(0,0,0,0.8), 0 0 30px rgba(168,85,247,0.25); background: rgba(13, 17, 28, 0.98);">
+      <div class="modal-header" style="border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 14px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, #a855f7, #6366f1); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; color: #fff;">
+            <i class="fa-solid fa-terminal"></i>
+          </div>
+          <div>
+            <h3 class="modal-title" style="font-size: 1.1rem; margin: 0;">CipherVault Command OS</h3>
+            <span style="font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono);">SECURE ACCESS GATEWAY v3.5</span>
+          </div>
+        </div>
+        <button type="button" class="modal-close-btn" id="closeAdminLoginModal">&times;</button>
+      </div>
+
+      <!-- Portal Type Tabs -->
+      <div class="os-login-tabs" style="display: flex; gap: 8px; margin: 16px 0 12px 0; background: rgba(0,0,0,0.4); padding: 4px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+        <button type="button" class="os-tab-btn active" id="tabAdminLoginBtn" style="flex: 1; padding: 8px; font-size: 0.82rem; border-radius: 6px; border: none; background: rgba(168,85,247,0.25); color: #fff; cursor: pointer; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 6px;">
+          <i class="fa-solid fa-user-shield" style="color: #c084fc;"></i> Root Admin
+        </button>
+        <button type="button" class="os-tab-btn" id="tabSellerLoginBtn" style="flex: 1; padding: 8px; font-size: 0.82rem; border-radius: 6px; border: none; background: transparent; color: var(--text-muted); cursor: pointer; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 6px;">
+          <i class="fa-solid fa-store" style="color: var(--accent-amber);"></i> Seller Agent
+        </button>
+      </div>
+
+      <div class="modal-body" style="padding-top: 6px;">
+        <!-- Admin Form -->
+        <div id="adminLoginFormFields">
+          <div class="input-item" style="margin-bottom: 12px;">
+            <label class="input-label" style="font-size: 0.8rem;"><i class="fa-solid fa-user"></i> Tài khoản Root Admin:</label>
+            <input type="text" id="adminUsernameInput" class="styled-input" placeholder="Nhập tài khoản Admin..." autocomplete="off" />
+          </div>
+          <div class="input-item" style="margin-bottom: 12px;">
+            <label class="input-label" style="font-size: 0.8rem;"><i class="fa-solid fa-lock"></i> Mật khẩu Master:</label>
+            <div class="password-input-wrapper compact">
+              <i class="fa-solid fa-lock input-prefix-icon"></i>
+              <input type="password" id="adminPasswordInput" class="styled-input" placeholder="Nhập mật khẩu..." autocomplete="off" />
+              <button type="button" class="toggle-pwd-visibility-btn" data-target="adminPasswordInput" title="Hiện/Ẩn mật khẩu"><i class="fa-solid fa-eye"></i></button>
+            </div>
+          </div>
+          <div class="input-item" style="margin-bottom: 16px;">
+            <label class="input-label" style="font-size: 0.8rem; color: var(--accent-amber);"><i class="fa-solid fa-shield-halved"></i> Mã Bảo Mật Cấp Cao (Security PIN):</label>
+            <div class="password-input-wrapper compact" style="border-color: rgba(245, 158, 11, 0.4);">
+              <i class="fa-solid fa-key input-prefix-icon" style="color: var(--accent-amber);"></i>
+              <input type="password" id="adminSecurityCodeInput" class="styled-input" placeholder="Nhập mã bảo mật PIN..." autocomplete="off" />
+              <button type="button" class="toggle-pwd-visibility-btn" data-target="adminSecurityCodeInput" title="Hiện/Ẩn mã PIN"><i class="fa-solid fa-eye"></i></button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Seller Form -->
+        <div id="sellerLoginFormFields" style="display: none;">
+          <div class="input-item" style="margin-bottom: 12px;">
+            <label class="input-label" style="font-size: 0.8rem;"><i class="fa-solid fa-user-tag"></i> Tài khoản Seller:</label>
+            <input type="text" id="sellerUsernameInput" class="styled-input" placeholder="Nhập tài khoản seller..." autocomplete="off" />
+          </div>
+          <div class="input-item" style="margin-bottom: 16px;">
+            <label class="input-label" style="font-size: 0.8rem;"><i class="fa-solid fa-lock"></i> Mật khẩu Seller:</label>
+            <div class="password-input-wrapper compact">
+              <i class="fa-solid fa-lock input-prefix-icon"></i>
+              <input type="password" id="sellerPasswordInput" class="styled-input" placeholder="Nhập mật khẩu seller..." autocomplete="off" />
+              <button type="button" class="toggle-pwd-visibility-btn" data-target="sellerPasswordInput" title="Hiện/Ẩn mật khẩu"><i class="fa-solid fa-eye"></i></button>
+            </div>
+          </div>
+        </div>
+
+        <button type="button" class="primary-action-btn" id="adminLoginBtn" style="width: 100%; padding: 12px; font-weight: 700; background: linear-gradient(135deg, #a855f7, #6366f1); box-shadow: 0 4px 20px rgba(168,85,247,0.4);">
+          <i class="fa-solid fa-right-to-bracket"></i> ĐĂNG NHẬP HỆ THỐNG
+        </button>
+        <p id="adminLoginError" style="display: none; color: var(--accent-rose); font-size: 0.82rem; margin-top: 10px; text-align: center;"><i class="fa-solid fa-triangle-exclamation"></i> Sai thông tin đăng nhập hoặc mã bảo mật!</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- OS-Style Admin Dashboard (Master Console) -->
+  <div class="modal-backdrop" id="adminDashboardModal" style="display: none;">
+    <div class="modal-content glass-card large-modal os-admin-console">
+      <!-- Top Bar -->
+      <div class="os-header-bar">
+        <div class="os-header-left">
+          <div class="os-status-lamp"></div>
+          <span class="os-brand"><i class="fa-solid fa-shield-cat"></i> CIPHERVAULT OS <strong>v4.0</strong></span>
+          <span class="os-role-badge" id="osCurrentRoleBadge"><i class="fa-solid fa-crown" style="color: #fbbf24;"></i> ROOT ADMIN</span>
+        </div>
+        <div class="os-header-right">
+          <span class="os-clock font-mono" id="osLiveClock">00:00:00</span>
+          <button type="button" class="os-btn-danger" id="adminLogoutBtn"><i class="fa-solid fa-power-off"></i> Đăng xuất</button>
+          <button type="button" class="modal-close-btn" id="closeAdminDashboardModal">&times;</button>
+        </div>
+      </div>
+
+      <!-- Navigation Bar -->
+      <div class="os-nav-bar">
+        <button type="button" class="os-nav-btn active" data-ostab="overview"><i class="fa-solid fa-chart-pie"></i> Tổng Quan</button>
+        <button type="button" class="os-nav-btn" data-ostab="sellers" id="osNavSellersBtn"><i class="fa-solid fa-users-gear"></i> Quản Lý Seller</button>
+        <button type="button" class="os-nav-btn" data-ostab="keys"><i class="fa-solid fa-key"></i> Kho License Key</button>
+        <button type="button" class="os-nav-btn" data-ostab="settings" id="osNavSettingsBtn"><i class="fa-solid fa-sliders"></i> Cài Đặt Hệ Thống</button>
+      </div>
+
+      <!-- Main OS Content Area -->
+      <div class="os-content-body">
+
+        <!-- TAB 1: OVERVIEW -->
+        <div class="os-tab-pane active" id="ostab-overview">
+          <div class="os-stat-cards-grid">
+            <div class="os-stat-card">
+              <div class="stat-icon-wrap" style="color: var(--accent-cyan);"><i class="fa-solid fa-key"></i></div>
+              <div class="stat-meta">
+                <span class="stat-label">Tổng Key Hệ Thống</span>
+                <span class="stat-val font-mono" id="statTotalKeys">0</span>
+              </div>
+            </div>
+            <div class="os-stat-card">
+              <div class="stat-icon-wrap" style="color: var(--accent-emerald);"><i class="fa-solid fa-circle-check"></i></div>
+              <div class="stat-meta">
+                <span class="stat-label">Key Đang Hoạt Động</span>
+                <span class="stat-val font-mono" id="statActiveKeys">0</span>
+              </div>
+            </div>
+            <div class="os-stat-card" id="statSellerCardWrap">
+              <div class="stat-icon-wrap" style="color: #c084fc;"><i class="fa-solid fa-user-group"></i></div>
+              <div class="stat-meta">
+                <span class="stat-label">Đại Lý (Sellers)</span>
+                <span class="stat-val font-mono" id="statTotalSellers">0</span>
+              </div>
+            </div>
+            <div class="os-stat-card">
+              <div class="stat-icon-wrap" style="color: var(--accent-amber);"><i class="fa-solid fa-unlock-keyhole"></i></div>
+              <div class="stat-meta">
+                <span class="stat-label">Chế Độ Miễn Phí</span>
+                <span class="stat-val" id="statFreeModeStatus" style="font-size: 1rem;">ĐANG BẬT</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="os-overview-grid" style="margin-top: 18px; display: grid; grid-template-columns: 2fr 1fr; gap: 16px;">
+            <div class="admin-section">
+              <h4 class="admin-section-title"><i class="fa-solid fa-bolt"></i> Thao Tác Nhanh</h4>
+              <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button type="button" class="primary-btn" id="quickGenDayKeyBtn"><i class="fa-solid fa-plus"></i> Tạo 5 Key Ngày</button>
+                <button type="button" class="primary-btn" id="quickGenWeekKeyBtn"><i class="fa-solid fa-plus"></i> Tạo 5 Key Tuần</button>
+                <button type="button" class="primary-btn" id="quickGenMonthKeyBtn"><i class="fa-solid fa-plus"></i> Tạo 5 Key Tháng</button>
+                <button type="button" class="secondary-btn" id="quickToggleFreeBtn"><i class="fa-solid fa-power-off"></i> Bật/Tắt Free Mode</button>
+              </div>
+            </div>
+            <div class="admin-section">
+              <h4 class="admin-section-title"><i class="fa-solid fa-server"></i> Trạng Thái Máy Chủ</h4>
+              <div style="font-size: 0.8rem; line-height: 1.8; color: var(--text-secondary);">
+                <div>Phiên bản: <strong style="color: #fff;">CipherVault OS v4.0</strong></div>
+                <div>Xác thực: <strong style="color: var(--accent-emerald);">AES-256 + 2FA PIN</strong></div>
+                <div>Lưu trữ: <strong style="color: var(--accent-cyan);">Zero-Knowledge Client RAM</strong></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: SELLER MANAGEMENT (Admin only) -->
+        <div class="os-tab-pane" id="ostab-sellers">
+          <div class="admin-section">
+            <h4 class="admin-section-title"><i class="fa-solid fa-user-plus"></i> Thêm Tài Khoản Seller / Đại Lý Mới</h4>
+            <div class="seller-create-grid">
+              <div class="input-item">
+                <label class="input-label">Tài khoản Seller:</label>
+                <input type="text" id="newSellerUsername" class="styled-input" placeholder="seller01" />
+              </div>
+              <div class="input-item">
+                <label class="input-label">Mật khẩu Seller:</label>
+                <input type="password" id="newSellerPassword" class="styled-input" placeholder="Nhập mật khẩu..." />
+              </div>
+              <div class="input-item">
+                <label class="input-label">Tên hiển thị:</label>
+                <input type="text" id="newSellerDisplayName" class="styled-input" placeholder="Đại Lý Miền Bắc" />
+              </div>
+            </div>
+
+            <!-- Quota Configuration Grid -->
+            <div style="margin-top: 14px; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+              <span style="font-size: 0.82rem; font-weight: 700; color: var(--accent-amber); display: block; margin-bottom: 8px;">
+                <i class="fa-solid fa-scale-balanced"></i> Phân Quyền Hạn Mức Tạo Key (Key Quotas):
+              </span>
+              <div class="seller-quota-inputs-grid" style="grid-template-columns: repeat(5, 1fr);">
+                <div>
+                  <label class="input-label" style="font-size: 0.75rem;">Hạn mức Key Giờ (1h):</label>
+                  <input type="number" id="quotaHour" class="styled-input font-mono" value="20" min="0" />
+                </div>
+                <div>
+                  <label class="input-label" style="font-size: 0.75rem;">Hạn mức Key Ngày (1d):</label>
+                  <input type="number" id="quotaDay" class="styled-input font-mono" value="10" min="0" />
+                </div>
+                <div>
+                  <label class="input-label" style="font-size: 0.75rem;">Hạn mức Key Tuần (7d):</label>
+                  <input type="number" id="quotaWeek" class="styled-input font-mono" value="5" min="0" />
+                </div>
+                <div>
+                  <label class="input-label" style="font-size: 0.75rem;">Hạn mức Key Tháng (30d):</label>
+                  <input type="number" id="quotaMonth" class="styled-input font-mono" value="2" min="0" />
+                </div>
+                <div>
+                  <label class="input-label" style="font-size: 0.75rem;">Hạn mức Vĩnh Viễn:</label>
+                  <input type="number" id="quotaLifetime" class="styled-input font-mono" value="0" min="0" />
+                </div>
+              </div>
+            </div>
+
+            <button type="button" class="primary-btn" id="createSellerBtn" style="margin-top: 12px;">
+              <i class="fa-solid fa-plus"></i> Tạo Tài Khoản Seller
+            </button>
+          </div>
+
+          <!-- Seller List Table -->
+          <div class="admin-section" style="margin-top: 18px;">
+            <h4 class="admin-section-title"><i class="fa-solid fa-users"></i> Danh Sách Đại Lý & Hạn Mức</h4>
+            <div class="admin-key-table-wrap">
+              <table class="audit-table">
+                <thead>
+                  <tr>
+                    <th>Tài khoản</th>
+                    <th>Tên đại lý</th>
+                    <th>Hạn mức Giờ</th>
+                    <th>Hạn mức Ngày</th>
+                    <th>Hạn mức Tuần</th>
+                    <th>Hạn mức Tháng</th>
+                    <th>Vĩnh viễn</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody id="sellerTableBody">
+                  <!-- Dynamically rendered -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 3: KEY VAULT -->
+        <div class="os-tab-pane" id="ostab-keys">
+          <!-- Key Generation Panel -->
+          <div class="admin-section">
+            <h4 class="admin-section-title"><i class="fa-solid fa-wand-magic-sparkles"></i> Tạo License Key</h4>
+            <div id="sellerQuotaNoticeBox" style="display: none; padding: 10px 14px; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4); border-radius: 8px; margin-bottom: 12px; font-size: 0.85rem; color: #fde68a;">
+              <!-- Dynamic seller quota notice -->
+            </div>
+            <div class="key-gen-row">
+              <select id="adminKeyDuration" class="styled-select" style="max-width: 210px;">
+                <optgroup label="⏱️ Gói Theo Giờ">
+                  <option value="1h">1 Giờ (60 Phút)</option>
+                  <option value="2h">2 Giờ</option>
+                  <option value="6h">6 Giờ</option>
+                  <option value="12h">12 Giờ</option>
+                  <option value="custom_h">⏱️ Tùy chọn số giờ...</option>
+                </optgroup>
+                <optgroup label="📅 Gói Theo Ngày / Tháng">
+                  <option value="1" selected>1 Ngày (24h)</option>
+                  <option value="7">7 Ngày (1 Tuần)</option>
+                  <option value="30">30 Ngày (1 Tháng)</option>
+                  <option value="365">365 Ngày (1 Năm)</option>
+                  <option value="9999">Vĩnh viễn (Lifetime)</option>
+                </optgroup>
+              </select>
+              <input type="number" id="adminCustomHoursInput" class="styled-input font-mono" placeholder="Số giờ (vd: 3)..." min="1" max="8760" value="3" style="display: none; max-width: 140px;" title="Nhập số giờ tùy chỉnh" />
+              <input type="number" id="adminKeyCount" class="styled-input" value="1" min="1" max="50" style="max-width: 80px;" title="Số lượng key tạo" />
+              <button type="button" class="primary-btn" id="adminGenKeyBtn"><i class="fa-solid fa-plus"></i> Tạo Key</button>
+              <button type="button" class="secondary-btn" id="adminCopyAllKeysBtn"><i class="fa-solid fa-copy"></i> Sao chép tất cả</button>
+              <button type="button" class="secondary-btn" id="adminExportKeysBtn"><i class="fa-solid fa-file-export"></i> Xuất file TXT</button>
+              <button type="button" class="mini-btn" id="adminClearAllKeysBtn" style="color: var(--accent-rose);"><i class="fa-solid fa-trash-can"></i> Xóa tất cả</button>
+            </div>
+          </div>
+
+          <!-- Key Table with Search & Filter -->
+          <div class="admin-section" style="margin-top: 18px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+              <h4 class="admin-section-title" style="margin: 0;"><i class="fa-solid fa-database"></i> Danh Sách License Key</h4>
+              <div style="display: flex; gap: 8px;">
+                <input type="text" id="searchKeyInput" class="styled-input font-mono" placeholder="Tìm key hoặc tên seller..." style="padding: 4px 10px; font-size: 0.8rem; max-width: 220px;" />
+                <select id="filterKeyStatus" class="styled-select" style="padding: 4px 10px; font-size: 0.8rem; max-width: 140px;">
+                  <option value="all">Tất cả trạng thái</option>
+                  <option value="active">Đang hoạt động</option>
+                  <option value="suspended">Đã khóa</option>
+                  <option value="expired">Hết hạn</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="admin-key-table-wrap">
+              <table class="audit-table admin-key-table">
+                <thead>
+                  <tr>
+                    <th>License Key</th>
+                    <th>Thời hạn</th>
+                    <th>Người tạo</th>
+                    <th>Ngày tạo</th>
+                    <th>Ngày hết hạn</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody id="adminKeyTableBody">
+                  <!-- Dynamically populated -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 4: SETTINGS (Admin only) -->
+        <div class="os-tab-pane" id="ostab-settings">
+          <div class="admin-section">
+            <h4 class="admin-section-title"><i class="fa-solid fa-gear"></i> Cấu Hình Toàn Diện Hệ Thống</h4>
+            <div class="admin-settings-grid">
+              <div class="admin-setting-card">
+                <div class="setting-header">
+                  <span><i class="fa-solid fa-unlock" style="color: var(--accent-emerald);"></i> Chế độ Miễn Phí (Free Mode)</span>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="adminFreeModeToggle" />
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+                <p class="setting-desc">Khi BẬT: Toàn bộ người dùng truy cập không cần Key. Khi TẮT: Bắt buộc nhập Key bản quyền.</p>
+              </div>
+              <div class="admin-setting-card">
+                <label class="input-label"><i class="fa-brands fa-telegram" style="color: #2AABEE;"></i> Link Telegram cá nhân (nút liên hệ):</label>
+                <input type="text" id="adminTelegramLink" class="styled-input" placeholder="https://t.me/yourusername" />
+              </div>
+              <div class="admin-setting-card">
+                <label class="input-label"><i class="fa-solid fa-users" style="color: var(--accent-cyan);"></i> Link nhóm Telegram (banner mời vào):</label>
+                <input type="text" id="adminGroupLink" class="styled-input" placeholder="https://t.me/yourchannel" />
+              </div>
+            </div>
+            <button type="button" class="primary-btn" id="adminSaveSettingsBtn" style="margin-top: 14px;"><i class="fa-solid fa-floppy-disk"></i> Lưu Cài Đặt Hệ Thống</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- JSZip Library for batch download & IPA extraction -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <!-- QRCode.js for generating QR Codes -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <!-- Application Logic -->
+  <script src="app.js?v=4.3.0"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(regs => {
+        regs.forEach(r => r.update());
+      });
+      navigator.serviceWorker.register('./sw.js?v=4.3.0').catch(() => {});
+    }
+  </script>
+</body>
+</html>
