@@ -3112,12 +3112,49 @@ Mã kiểm tra tính toàn vẹn: CVLT-TEST-${Math.random().toString(36).substri
     }
 
     // Signing radio mode switch
-    signAdhocRadio.addEventListener('change', () => {
-      customCertInputs.style.display = 'none';
-    });
-    signCustomRadio.addEventListener('change', () => {
-      customCertInputs.style.display = 'block';
-    });
+    const signExportRadio = document.getElementById('ipaSignExportRadio');
+    const exportInfoPanel = document.getElementById('ipaExportInfoPanel');
+    const ipaResultStatusText = document.getElementById('ipaResultStatusText');
+    const ipaOpenInESignBtn = document.getElementById('ipaOpenInESignBtn');
+
+    function updateSigningModeUI() {
+      if (signExportRadio && signExportRadio.checked) {
+        if (customCertInputs) customCertInputs.style.display = 'none';
+        if (exportInfoPanel) exportInfoPanel.style.display = 'block';
+        if (startBuildBtn) {
+          startBuildBtn.innerHTML = `
+            <div class="btn-shine"></div>
+            <i class="fa-solid fa-file-export"></i>
+            <span>EXPORT IPA (KHÔNG CẦN CHỨNG CHỈ)</span>
+          `;
+        }
+      } else if (signCustomRadio && signCustomRadio.checked) {
+        if (customCertInputs) customCertInputs.style.display = 'block';
+        if (exportInfoPanel) exportInfoPanel.style.display = 'none';
+        if (startBuildBtn) {
+          startBuildBtn.innerHTML = `
+            <div class="btn-shine"></div>
+            <i class="fa-solid fa-signature"></i>
+            <span>ĐÓNG GÓI & KÝ SỐ IPA (.P12)</span>
+          `;
+        }
+      } else {
+        // Ad-Hoc / FakeSign
+        if (customCertInputs) customCertInputs.style.display = 'none';
+        if (exportInfoPanel) exportInfoPanel.style.display = 'none';
+        if (startBuildBtn) {
+          startBuildBtn.innerHTML = `
+            <div class="btn-shine"></div>
+            <i class="fa-solid fa-box-archive"></i>
+            <span>ĐÓNG GÓI & TẢI VỀ IPA (FAKE-SIGN)</span>
+          `;
+        }
+      }
+    }
+
+    if (signAdhocRadio) signAdhocRadio.addEventListener('change', updateSigningModeUI);
+    if (signCustomRadio) signCustomRadio.addEventListener('change', updateSigningModeUI);
+    if (signExportRadio) signExportRadio.addEventListener('change', updateSigningModeUI);
 
     p12Dropzone.addEventListener('click', () => p12FileInput.click());
     p12FileInput.addEventListener('change', async (e) => {
@@ -3149,6 +3186,9 @@ Mã kiểm tra tính toàn vẹn: CVLT-TEST-${Math.random().toString(36).substri
         return;
       }
       sfx.click();
+
+      const isExportOnly = signExportRadio && signExportRadio.checked;
+      const isCustomCert = signCustomRadio && signCustomRadio.checked;
 
       progressSection.style.display = 'block';
       progressBarFill.style.width = '10%';
@@ -3202,7 +3242,6 @@ Mã kiểm tra tính toàn vẹn: CVLT-TEST-${Math.random().toString(36).substri
             let finalBytes = dylib.bytes;
             if (dylib.obfuscate) {
               // Apply MachO obfuscation: strip symbols + fake sections
-              // Note: scrambleCstrings is OFF by default to keep dylib functional
               finalBytes = MachOObfuscator.obfuscate(dylib.bytes, {
                 stripSymbols: true,
                 scrambleCstrings: false,
@@ -3220,36 +3259,49 @@ Mã kiểm tra tính toàn vẹn: CVLT-TEST-${Math.random().toString(36).substri
           }
         }
 
-        // 4. Inject mobileprovision if custom cert
-        if (signCustomRadio.checked && provBytes) {
-          zip.file(`${appDir}embedded.mobileprovision`, provBytes);
+        // 4. Code Signing / CodeResources / Clean Export
+        if (isExportOnly) {
+          progressBarFill.style.width = '65%';
+          progressPercent.textContent = '65%';
+          progressText.textContent = 'Đang tối ưu cấu trúc Export IPA thuần (Không kèm chữ ký)...';
+          // Clean old signatures to ensure maximum compatibility with TrollStore / Feather / Sideloadly
+          Object.keys(zip.files).forEach(path => {
+            if (path.startsWith(`${appDir}_CodeSignature/`)) {
+              zip.remove(path);
+            }
+          });
+        } else {
+          // Custom Cert or Ad-Hoc FakeSign
+          if (isCustomCert && provBytes) {
+            zip.file(`${appDir}embedded.mobileprovision`, provBytes);
+          }
+
+          progressBarFill.style.width = '65%';
+          progressPercent.textContent = '65%';
+          progressText.textContent = 'Đang sinh manifest chữ ký số CodeResources...';
+
+          const codeResXml = await IpaStudioEngine.generateCodeResourcesManifest(zip, appDir);
+          zip.file(`${appDir}_CodeSignature/CodeResources`, codeResXml);
         }
-
-        progressBarFill.style.width = '65%';
-        progressPercent.textContent = '65%';
-        progressText.textContent = 'Đang sinh manifest chữ ký số CodeResources...';
-
-        // 5. Generate CodeResources
-        const codeResXml = await IpaStudioEngine.generateCodeResourcesManifest(zip, appDir);
-        zip.file(`${appDir}_CodeSignature/CodeResources`, codeResXml);
 
         progressBarFill.style.width = '85%';
         progressPercent.textContent = '85%';
         progressText.textContent = 'Đang đóng gói lại tệp IPA hoàn chỉnh...';
 
-        // 6. Generate final IPA ZIP
+        // 5. Generate final IPA ZIP
         const outputIpaBlob = await zip.generateAsync({
           type: 'blob',
           compression: 'DEFLATE',
           compressionOptions: { level: 6 }
         });
 
-        const newFileName = `${(appNameInput.value || 'App').replace(/\s+/g, '_')}_Modified_${Date.now().toString().slice(-4)}.ipa`;
+        const suffix = isExportOnly ? 'Exported' : 'Modified';
+        const newFileName = `${(appNameInput.value || 'App').replace(/\s+/g, '_')}_${suffix}_${Date.now().toString().slice(-4)}.ipa`;
         const downloadUrl = URL.createObjectURL(outputIpaBlob);
 
         progressBarFill.style.width = '100%';
         progressPercent.textContent = '100%';
-        progressText.textContent = 'Đóng gói hoàn tất!';
+        progressText.textContent = isExportOnly ? 'Export hoàn tất!' : 'Đóng gói hoàn tất!';
         startBuildBtn.disabled = false;
 
         const frameworkCount = injectedDylibs.filter(d => d.mode === 'framework').length;
@@ -3259,16 +3311,42 @@ Mã kiểm tra tính toàn vẹn: CVLT-TEST-${Math.random().toString(36).substri
         downloadResultBtn.href = downloadUrl;
         downloadResultBtn.download = newFileName;
 
+        if (ipaResultStatusText) {
+          if (isExportOnly) {
+            ipaResultStatusText.innerHTML = `
+              <i class="fa-solid fa-file-export" style="color:var(--accent-cyan);"></i>
+              <strong>Đã Export IPA thành công!</strong> Tệp sẵn sàng cài đặt qua <strong>TrollStore</strong>, <strong>Feather</strong>, <strong>Sideloadly PC</strong> hoặc <strong>AltStore</strong>.
+            `;
+          } else if (isCustomCert) {
+            ipaResultStatusText.innerHTML = `
+              <i class="fa-solid fa-circle-check"></i> Đã tiêm Dylib, tích hợp chứng chỉ nhà phát triển .p12 và ký số thành công!
+            `;
+          } else {
+            ipaResultStatusText.innerHTML = `
+              <i class="fa-solid fa-circle-check"></i> Đã tiêm Dylib, cập nhật Info.plist và ký số FakeSign / Ad-Hoc thành công!
+            `;
+          }
+        }
+
+        if (ipaOpenInESignBtn) {
+          ipaOpenInESignBtn.style.display = 'inline-flex';
+          ipaOpenInESignBtn.href = downloadUrl;
+          ipaOpenInESignBtn.download = newFileName;
+        }
+
         resultContainer.style.display = 'block';
         sfx.success();
-        showToast('🎉 Đóng gói và tùy biến IPA thành công! Sẵn sàng tải về.', 'success');
-        AuditLogger.log('Đóng gói IPA', newFileName, outputIpaBlob.size, 'Thành công');
+        const successMsg = isExportOnly
+          ? '🎉 Export IPA thuần thành công! Bạn có thể cài ngay qua TrollStore hoặc ký bằng Feather/Sideloadly.'
+          : '🎉 Đóng gói và tùy biến IPA thành công! Sẵn sàng tải về.';
+        showToast(successMsg, 'success');
+        AuditLogger.log(isExportOnly ? 'Export IPA' : 'Đóng gói IPA', newFileName, outputIpaBlob.size, 'Thành công');
       } catch (err) {
         console.error('Build IPA error:', err);
         sfx.error();
         startBuildBtn.disabled = false;
         progressSection.style.display = 'none';
-        showToast('Lỗi khi đóng gói IPA: ' + err.message, 'error');
+        showToast('Lỗi khi xử lý IPA: ' + err.message, 'error');
       }
     });
   }
