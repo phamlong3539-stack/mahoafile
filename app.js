@@ -1518,6 +1518,8 @@ Mã kiểm tra tính toàn vẹn: CVLT-TEST-${Math.random().toString(36).substri
 
   // --- Main File Processing Pipeline ---
   async function executeFileCryptoProcess() {
+    if (!enforceOperationGate()) return;
+
     const isKeyfile = state.authMode === 'keyfile';
     const password = document.getElementById('masterPassword').value;
     const authSecret = isKeyfile ? state.keyfileBytes : password;
@@ -1864,6 +1866,8 @@ Mã kiểm tra tính toàn vẹn: CVLT-TEST-${Math.random().toString(36).substri
     });
 
     encryptBtn.addEventListener('click', async () => {
+      if (!enforceOperationGate()) return;
+
       const text = plainArea.value;
       const pass = textPass.value;
 
@@ -1893,6 +1897,8 @@ Mã kiểm tra tính toàn vẹn: CVLT-TEST-${Math.random().toString(36).substri
     });
 
     decryptBtn.addEventListener('click', async () => {
+      if (!enforceOperationGate()) return;
+
       const cipher = cipherArea.value;
       const pass = textPass.value;
 
@@ -3562,9 +3568,62 @@ Mã kiểm tra tính toàn vẹn: CVLT-TEST-${Math.random().toString(36).substri
 
   // Current session state: { role: 'admin' | 'seller' | null, seller: object | null }
   let currentOsSession = {
-    role: null,
+    role: sessionStorage.getItem('cvlt_os_role') || null,
     seller: null
   };
+  try {
+    const savedSeller = sessionStorage.getItem('cvlt_os_seller');
+    if (savedSeller) currentOsSession.seller = JSON.parse(savedSeller);
+  } catch {}
+
+  // ==========================================================================
+  // OPERATION ACCESS GATEKEEPER
+  // - Admin & Seller: VIP Bypass (No Key / Account required)
+  // - Free Mode ON: Open to all
+  // - Regular User: MUST be logged in AND have an unexpired License Key
+  // ==========================================================================
+  function enforceOperationGate() {
+    // 1. Root Admin or Seller -> 100% UNLIMITED VIP ACCESS, NO KEY NEEDED
+    if (currentOsSession.role === 'admin' || currentOsSession.role === 'seller') {
+      return true;
+    }
+
+    // 2. Global Free Mode
+    const settings = AppSettings.get();
+    if (settings.freeMode) {
+      return true;
+    }
+
+    // 3. Check User Account
+    const curUser = UserManager.getCurrentUser();
+    if (!curUser) {
+      sfx.error();
+      showToast('🔒 Bạn cần ĐĂNG NHẬP hoặc ĐĂNG KÝ tài khoản để sử dụng tính năng!', 'error');
+      const authModal = document.getElementById('userAuthModal');
+      if (authModal) authModal.style.display = 'flex';
+      return false;
+    }
+
+    // 4. Check User Subscription Expiry
+    const exp = curUser.subscriptionExpires;
+    if (!exp) {
+      sfx.error();
+      showToast('⚠️ Tài khoản @' + curUser.username + ' chưa nạp License Key! Vui lòng nạp Key để mở khóa.', 'error');
+      const keyModal = document.getElementById('keyActivationModal');
+      if (keyModal) keyModal.style.display = 'flex';
+      return false;
+    }
+
+    if (exp < 9999999999999 && Date.now() > exp) {
+      sfx.error();
+      showToast('⛔ License Key của bạn đã hết hạn! Vui lòng nạp thêm Key để tiếp tục sử dụng.', 'error');
+      const keyModal = document.getElementById('keyActivationModal');
+      if (keyModal) keyModal.style.display = 'flex';
+      return false;
+    }
+
+    return true;
+  }
 
   // --- Seller Storage Manager ---
   class SellerManager {
@@ -4127,10 +4186,13 @@ Mã kiểm tra tính toàn vẹn: CVLT-TEST-${Math.random().toString(36).substri
           _CipherShield.recordSuccess();
           sfx.success();
           currentOsSession = { role: 'admin', seller: null };
+          sessionStorage.setItem('cvlt_os_role', 'admin');
+          sessionStorage.removeItem('cvlt_os_seller');
           adminLoginModal.style.display = 'none';
           document.getElementById('adminUsernameInput').value = '';
           document.getElementById('adminPasswordInput').value = '';
           document.getElementById('adminSecurityCodeInput').value = '';
+          updateLiveSubscriptionTimer();
           openOsDashboard();
         } else {
           const lockedOut = _CipherShield.recordFail();
@@ -4163,9 +4225,12 @@ Mã kiểm tra tính toàn vẹn: CVLT-TEST-${Math.random().toString(36).substri
           _CipherShield.recordSuccess();
           sfx.success();
           currentOsSession = { role: 'seller', seller: auth.seller };
+          sessionStorage.setItem('cvlt_os_role', 'seller');
+          sessionStorage.setItem('cvlt_os_seller', JSON.stringify(auth.seller));
           adminLoginModal.style.display = 'none';
           document.getElementById('sellerUsernameInput').value = '';
           document.getElementById('sellerPasswordInput').value = '';
+          updateLiveSubscriptionTimer();
           openOsDashboard();
         } else {
           _CipherShield.recordFail();
@@ -4219,7 +4284,10 @@ Mã kiểm tra tính toàn vẹn: CVLT-TEST-${Math.random().toString(36).substri
       adminLogoutBtn.addEventListener('click', () => {
         sfx.click();
         currentOsSession = { role: null, seller: null };
+        sessionStorage.removeItem('cvlt_os_role');
+        sessionStorage.removeItem('cvlt_os_seller');
         document.getElementById('adminDashboardModal').style.display = 'none';
+        updateLiveSubscriptionTimer();
         showToast('Đã đăng xuất an toàn khỏi Command OS.', 'info');
       });
     }
@@ -4693,8 +4761,27 @@ Mã kiểm tra tính toàn vẹn: CVLT-TEST-${Math.random().toString(36).substri
       const countEl = document.getElementById('subLiveCountdown');
       const titleEl = document.getElementById('subBadgeTitle');
       const profExpEl = document.getElementById('profileExpiryCountdown');
-      const curUser = UserManager.getCurrentUser();
 
+      // 1. Root Admin VIP Bypass Check
+      if (currentOsSession.role === 'admin') {
+        if (titleEl) titleEl.textContent = 'QUYỀN HẠN ĐẶC BIỆT';
+        if (countEl) countEl.innerHTML = '<span style="color:#fbbf24;"><i class="fa-solid fa-crown"></i> ROOT ADMIN (VIP Bypass)</span>';
+        if (badge) badge.className = 'user-sub-badge has-active-sub';
+        if (profExpEl) profExpEl.textContent = 'Root Admin - Toàn quyền không cần Key';
+        return;
+      }
+
+      // 2. Seller VIP Bypass Check
+      if (currentOsSession.role === 'seller') {
+        const sName = currentOsSession.seller?.displayName || 'Đại lý';
+        if (titleEl) titleEl.textContent = 'QUYỀN HẠN ĐẠI LÝ';
+        if (countEl) countEl.innerHTML = `<span style="color:var(--accent-cyan);"><i class="fa-solid fa-store"></i> SELLER: ${sName} (VIP)</span>`;
+        if (badge) badge.className = 'user-sub-badge has-active-sub';
+        if (profExpEl) profExpEl.textContent = 'Đại lý Seller - Miễn phí không cần Key';
+        return;
+      }
+
+      // 3. Global Free Mode Check
       if (settings.freeMode) {
         if (titleEl) titleEl.textContent = 'CHẾ ĐỘ HỆ THỐNG';
         if (countEl) countEl.textContent = '⚡ Miễn Phí (Free Mode)';
@@ -4705,7 +4792,9 @@ Mã kiểm tra tính toàn vẹn: CVLT-TEST-${Math.random().toString(36).substri
         return;
       }
 
+      // 4. Regular User Subscription Check
       if (titleEl) titleEl.textContent = 'THỜI HẠN KEY CỦA BẠN';
+      const curUser = UserManager.getCurrentUser();
 
       if (!curUser) {
         if (countEl) countEl.textContent = '🔒 Chưa đăng nhập';
@@ -5047,20 +5136,29 @@ Mã kiểm tra tính toàn vẹn: CVLT-TEST-${Math.random().toString(36).substri
   }
 
   function checkUserAccess() {
+    // If Root Admin or Seller is logged in -> 100% VIP Bypass, never prompt!
+    if (currentOsSession.role === 'admin' || currentOsSession.role === 'seller') return;
+
     const settings = AppSettings.get();
     if (settings.freeMode) return;
 
     const curUser = UserManager.getCurrentUser();
-    if (curUser) {
-      if (curUser.subscriptionExpires >= 9999999999999 || (curUser.subscriptionExpires && curUser.subscriptionExpires > Date.now())) {
-        return;
-      }
+    if (!curUser) {
+      setTimeout(() => {
+        const authModal = document.getElementById('userAuthModal');
+        if (authModal) authModal.style.display = 'flex';
+      }, 1000);
+      return;
+    }
+
+    if (curUser.subscriptionExpires >= 9999999999999 || (curUser.subscriptionExpires && curUser.subscriptionExpires > Date.now())) {
+      return;
     }
 
     setTimeout(() => {
       const modal = document.getElementById('keyActivationModal');
       if (modal) modal.style.display = 'flex';
-    }, 1500);
+    }, 1000);
   }
 
   // --- Bootstrap ---
