@@ -643,6 +643,9 @@
                 <p class="pane-desc">Bộ công cụ tùy biến và tạo mới ứng dụng iOS chuyên nghiệp (Sideloadly Web Engine): Nhúng thư viện .dylib, Trợ lý AI Copilot kiến tạo IPA đa ngôn ngữ, Ký số và Soi DRM Mach-O.</p>
               </div>
               <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button type="button" class="action-quick-btn" id="openAppStoreClonerBtn" style="background: linear-gradient(135deg, rgba(0,113,227,0.25), rgba(56,189,248,0.25)); border-color: #38bdf8; color: #fff;">
+                  <i class="fa-brands fa-app-store-ios" style="color:#38bdf8;"></i> Dán Link App Store
+                </button>
                 <button type="button" class="action-quick-btn" id="openCustomIpaCreatorBtn" style="background: linear-gradient(135deg, rgba(0,240,255,0.2), rgba(168,85,247,0.2)); border-color: var(--accent-cyan); color: #fff;">
                   <i class="fa-solid fa-wand-magic-sparkles" style="color:var(--accent-cyan);"></i> Tạo IPA Riêng Biệt
                 </button>
@@ -672,18 +675,18 @@
                 <div class="ai-avatar bot"><i class="fa-solid fa-microchip"></i></div>
                 <div class="ai-msg-content">
                   👋 <strong>Xin chào! Tôi là Trợ lý AI Chuyên Gia IPA &amp; Sideloading.</strong><br>
-                  Tôi hiểu đa ngôn ngữ (Tiếng Việt, English, 中文, v.v.). Bạn chỉ cần nói yêu cầu, tôi sẽ tự động phân tích, tạo IPA, đổi tên, nhúng dylib, vá lỗi chống văng và ký số tự động theo đúng ý bạn!
+                  Tôi hiểu đa ngôn ngữ (Tiếng Việt, English, 中文, v.v.). Bạn có thể dán link App Store (ví dụ: <code>https://apps.apple.com/...</code>) hoặc ra lệnh để tôi tự động nhân bản và tùy biến IPA theo đúng ý bạn!
                 </div>
               </div>
             </div>
 
             <!-- Quick Prompt Suggestions Chips -->
             <div class="ai-quick-chips" id="aiQuickChips">
+              <span class="ai-chip" data-prompt="Lấy thông tin từ link App Store https://apps.apple.com/vn/app/capcut/id1500855883 và tạo IPA CapCut Pro nhúng 3 dylib">🌐 Nhân Bản Link AppStore CapCut</span>
               <span class="ai-chip" data-prompt="Tạo cho tôi 1 game Flappy Bird tên Flappy Hero bundle id com.hero.game nhúng 5 dylib anti-cheat và ký TrollStore">🎮 Tạo App Game Flappy Hero + 5 Dylib</span>
               <span class="ai-chip" data-prompt="Tạo ứng dụng Web Wrapper mở trang web https://youtube.com tên YouTube Plus">🌐 Tạo Web-to-App Wrapper</span>
               <span class="ai-chip" data-prompt="Đổi tên app thành Siêu Ứng Dụng VIP, đổi bundle ID thành com.super.vip và bật chia sẻ tệp Files">✍️ Đổi tên &amp; Bundle ID VIP</span>
               <span class="ai-chip" data-prompt="Kiểm tra cấu trúc chống văng và tự động sửa toàn bộ lỗi">🛡️ Quét &amp; Sửa Lỗi Chống Văng</span>
-              <span class="ai-chip" data-prompt="Tạo 10 tệp dylib bảo vệ nhúng thẳng vào ứng dụng">⚡ Tạo 10 Dylib Armor</span>
               <span class="ai-chip" data-prompt="Đóng gói và tải về IPA đã sẵn sàng">📦 Đóng gói &amp; Tải về ngay</span>
             </div>
 
@@ -2237,6 +2240,98 @@
         <!-- Action Button -->
         <button type="button" class="primary-action-btn" id="executeCreateCustomIpaBtn" style="margin-top: 6px;">
           <i class="fa-solid fa-wand-magic-sparkles"></i> KHỞI TẠO ỨNG DỤNG &amp; NẠP VÀO STUDIO ĐỂ KÝ SỐ
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- App Store Link Cloner Modal (Nhân Bản Ứng Dụng Từ Link App Store) -->
+  <div class="modal-backdrop" id="appStoreClonerModal" style="display: none;">
+    <div class="modal-content glass-card" style="max-width: 650px; border: 1px solid rgba(56, 189, 248, 0.4); max-height: 90vh; overflow-y: auto;">
+      <div class="modal-header" style="border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 12px;">
+        <h3 class="modal-title" style="font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
+          <i class="fa-brands fa-app-store-ios" style="color: #38bdf8;"></i>
+          <span>Nhân Bản &amp; Trích Xuất IPA Từ Link App Store (App Store Cloner)</span>
+        </h3>
+        <button type="button" class="modal-close-btn" id="closeAppStoreClonerModalBtn">&times;</button>
+      </div>
+
+      <div class="modal-body" style="padding-top: 14px; display: flex; flex-direction: column; gap: 14px;">
+        <!-- Input row -->
+        <div>
+          <label class="input-label" for="appStoreUrlInput" style="font-weight: 700; color: #fff;"><i class="fa-solid fa-link" style="color: #38bdf8;"></i> Dán Đường Link App Store Hoặc Nhập ID / Tên Ứng Dụng:</label>
+          <div style="display: flex; gap: 8px; margin-top: 6px;">
+            <input type="text" id="appStoreUrlInput" class="styled-input font-mono" placeholder="VD: https://apps.apple.com/vn/app/capcut/id1500855883 hoặc id1500855883..." value="https://apps.apple.com/vn/app/capcut-video-editor/id1500855883" style="font-size: 0.82rem;" />
+            <button type="button" class="primary-btn" id="fetchAppStoreBtn" style="background: linear-gradient(135deg, #0284c7, #00f0ff); border: none; padding: 0 16px; white-space: nowrap;">
+              <i class="fa-solid fa-magnifying-glass"></i> Quét App
+            </button>
+          </div>
+
+          <!-- Quick Samples -->
+          <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px;">
+            <span style="font-size: 0.72rem; color: var(--text-muted); align-self: center;">Mẫu nhanh:</span>
+            <span class="appstore-quick-pick ai-chip" data-url="https://apps.apple.com/vn/app/capcut-video-editor/id1500855883">CapCut</span>
+            <span class="appstore-quick-pick ai-chip" data-url="https://apps.apple.com/vn/app/tiktok/id835599320">TikTok</span>
+            <span class="appstore-quick-pick ai-chip" data-url="https://apps.apple.com/vn/app/facebook/id284882215">Facebook</span>
+            <span class="appstore-quick-pick ai-chip" data-url="https://apps.apple.com/vn/app/telegram-messenger/id686449807">Telegram</span>
+            <span class="appstore-quick-pick ai-chip" data-url="https://apps.apple.com/vn/app/free-fire/id1300146617">Free Fire</span>
+          </div>
+        </div>
+
+        <!-- Live App Store Extracted Card -->
+        <div class="appstore-preview-card" id="appStorePreviewCard" style="display: none;">
+          <div class="appstore-preview-header">
+            <img id="appStoreIconImg" class="appstore-icon-img" src="" alt="App Icon" />
+            <div class="appstore-info">
+              <div class="appstore-app-name" id="appStoreAppNameText">CapCut - Video Editor</div>
+              <div class="appstore-dev-name" id="appStoreDevText">By Bytedance Pte. Ltd</div>
+              <div class="appstore-meta-tags">
+                <span class="appstore-tag" id="appStoreBundleTag"><code>com.lemon.lvoverseas</code></span>
+                <span class="appstore-tag" id="appStoreVerTag">v10.5.0</span>
+                <span class="appstore-tag" id="appStoreMinOsTag">iOS 12.0+</span>
+                <span class="appstore-tag" id="appStoreGenreTag">Photo &amp; Video</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Customization Options for the clone -->
+        <div id="appStoreCustomOptions" style="display: none; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 10px; border: 1px solid var(--border-subtle); display: flex; flex-direction: column; gap: 10px;">
+          <label class="input-label" style="font-weight: 700; color: #fff;"><i class="fa-solid fa-sliders" style="color: var(--accent-cyan);"></i> Tùy Chỉnh Bản Clone IPA:</label>
+          
+          <div class="options-grid" style="grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div>
+              <label class="input-label" for="appStoreCloneName">Tên ứng dụng sau khi sửa:</label>
+              <input type="text" id="appStoreCloneName" class="styled-input" value="" />
+            </div>
+            <div>
+              <label class="input-label" for="appStoreCloneBundleId">Bundle ID (Nhập đuôi .mod / .clone để cài song song):</label>
+              <input type="text" id="appStoreCloneBundleId" class="styled-input font-mono" value="" />
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 14px; flex-wrap: wrap; margin-top: 4px;">
+            <label class="custom-checkbox">
+              <input type="checkbox" id="appStoreInjectArmorDylib" checked />
+              <span class="checkmark"></span>
+              <span style="font-size: 0.8rem;">Nhúng <code>AntiBan_Protection.dylib</code></span>
+            </label>
+            <label class="custom-checkbox">
+              <input type="checkbox" id="appStoreInjectHookDylib" checked />
+              <span class="checkmark"></span>
+              <span style="font-size: 0.8rem;">Nhúng <code>TweakPluginHook.dylib</code></span>
+            </label>
+            <label class="custom-checkbox">
+              <input type="checkbox" id="appStoreEnableFileSharing" checked />
+              <span class="checkmark"></span>
+              <span style="font-size: 0.8rem;">Mở File Sharing (Ứng dụng Tệp iOS)</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Execute Clone Button -->
+        <button type="button" class="primary-action-btn" id="executeAppStoreCloneBtn" style="display: none; margin-top: 6px; background: linear-gradient(135deg, #0284c7, #00f0ff); color: #000; font-weight: 800;">
+          <i class="fa-brands fa-apple"></i> KHỞI TẠO BẢN CLONE IPA CHUẨN APP STORE &amp; NẠP VÀO STUDIO
         </button>
       </div>
     </div>

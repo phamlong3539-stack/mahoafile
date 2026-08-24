@@ -3354,6 +3354,64 @@ textarea {
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
+/* App Store Cloner Styles */
+.appstore-preview-card {
+  background: linear-gradient(135deg, rgba(0, 113, 227, 0.12), rgba(0, 0, 0, 0.5));
+  border: 1px solid rgba(0, 113, 227, 0.4);
+  border-radius: 12px;
+  padding: 14px;
+  margin-top: 12px;
+}
+
+.appstore-preview-header {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+.appstore-icon-img {
+  width: 72px;
+  height: 72px;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  object-fit: cover;
+}
+
+.appstore-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.appstore-app-name {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+.appstore-dev-name {
+  font-size: 0.76rem;
+  color: #38bdf8;
+}
+
+.appstore-meta-tags {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+
+.appstore-tag {
+  background: rgba(255, 255, 255, 0.08);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.68rem;
+  color: #cbd5e1;
+}
+
+
 
 
 
