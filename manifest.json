@@ -1,0 +1,16 @@
+{
+  "name": "CipherVault Pro - Cryptographic Suite",
+  "short_name": "CipherVault",
+  "description": "Zero-Knowledge Military-grade Cryptography Suite (AES-256, RSA-4096, Steganography, Hex Inspector)",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#07090e",
+  "theme_color": "#00f0ff",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath fill='%2300f0ff' d='M256 0c141.4 0 256 114.6 256 256S397.4 512 256 512 0 397.4 0 256 114.6 0 256 0zm0 64C150 64 64 150 64 256s86 192 192 192 192-86 192-192S362 64 256 64zm0 80c44.2 0 80 35.8 80 80 0 27.8-14.2 52.3-36 66.8L320 368c0 8.8-7.2 16-16 16h-96c-8.8 0-16-7.2-16-16l20-77.2c-21.8-14.5-36-39-36-66.8 0-44.2 35.8-80 80-80z'/%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}
