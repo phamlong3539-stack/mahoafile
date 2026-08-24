@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ciphervault-pro-v4';
+const CACHE_NAME = 'ciphervault-pro-v6';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

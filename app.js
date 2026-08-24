@@ -7,13 +7,7 @@
   'use strict';
 
   // ============================================================================
-  //  ██████╗██╗██████╗ ██╗  ██╗███████╗██████╗ ██╗   ██╗ █████╗ ██╗  ████████╗
-  // ██╔════╝██║██╔══██╗██║  ██║██╔════╝██╔══██╗██║   ██║██╔══██╗██║  ╚══██╔══╝
-  // ██║     ██║██████╔╝███████║█████╗  ██████╔╝██║   ██║███████║██║     ██║
-  // ██║     ██║██╔═══╝ ██╔══██║██╔══╝  ██╔══██╗╚██╗ ██╔╝██╔══██║██║     ██║
-  // ╚██████╗██║██║     ██║  ██║███████╗██║  ██║ ╚████╔╝ ██║  ██║███████╗██║
-  //  ╚═════╝╚═╝╚═╝     ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝  ╚═══╝  ╚═╝  ╚═╝╚══════╝╚═╝
-  //  TITANIUM MAXIMUM DEFENSE SUITE v6.0 (ULTRA ANTI-REVERSE & ANTI-TAMPER ARMOR)
+  //  CIPHERVAULT TITANIUM DEFENSE SUITE v7.0 — SAFE NON-DESTRUCTIVE BUILD
   // ============================================================================
 
   const _CipherShield = (() => {
@@ -22,7 +16,7 @@
     let _lockoutUntil = 0;
     let _blockedProbesCount = parseInt(localStorage.getItem('cvlt_blocked_probes') || '0', 10);
     const MAX_ATTEMPTS = 5;
-    const LOCKOUT_MS = 5 * 60 * 1000; // 5 phút
+    const LOCKOUT_MS = 5 * 60 * 1000;
 
     function _incBlockedProbes(reason) {
       _blockedProbesCount++;
@@ -36,108 +30,17 @@
       } catch {}
     }
 
-    // [LAYER 1] ANTI-CLICKJACKING & IFRAME HIJACK PROTECTION
-    try {
-      if (window.top !== window.self) {
-        window.top.location = window.self.location;
-      }
-    } catch {}
+    // [L1] ANTI-IFRAME / CLICKJACKING
+    try { if (window.top !== window.self) window.top.location = window.self.location; } catch {}
 
-    // [LAYER 2] ADVANCED DUAL-VECTOR DEBUGGER TRAP (Anti-Decompiler / Anti-Inspector)
-    function _debuggerTrap() {
-      const start = performance.now();
-      // eslint-disable-next-line no-debugger
-      debugger;
-      const end = performance.now();
-      if (end - start > 80) {
-        _incBlockedProbes('DEBUGGER_TIMING_TRAP');
-        return true;
-      }
-      return false;
-    }
-
-    // High-frequency recursive debugger lock when devtools is detected
-    function _infiniteDebuggerLock() {
-      (function _lock(i) {
-        if (('' + i / i).length !== 1 || i === 0) {
-          (function() {}).constructor('debugger')();
-        } else {
-          (function() {}).constructor('debugger')();
-        }
-        _lock(++i);
-      })(0);
-    }
-
-    // [LAYER 3] DYNAMIC WINDOW RESIZE FINGERPRINT (Devtools Dock/Undock detection)
-    function _detectBySize() {
-      const threshold = 160;
-      const isOpen = (
-        window.outerWidth - window.innerWidth > threshold ||
-        window.outerHeight - window.innerHeight > threshold
-      );
-      if (isOpen) _incBlockedProbes('DEVTOOLS_RESIZE_SIGNATURE');
-      return isOpen;
-    }
-
-    // [LAYER 4] TOSTRING GETTER DEVTOOLS DETECTION
-    function _detectByToString() {
-      let detected = false;
-      const d = document.createElement('div');
-      Object.defineProperty(d, 'id', {
-        get: function() {
-          detected = true;
-          _incBlockedProbes('TOSTRING_CONSOLE_PROBE');
-          return 'cvlt_armor_trap';
-        }
-      });
-      return detected;
-    }
-
-    // [LAYER 5] CONSOLE NEUTRALIZATION & ANTI-LEAK SHIELD
-    (function _sanitizeConsole() {
-      const noop = function() {};
-      const methods = [
-        'log', 'debug', 'info', 'warn', 'error', 'table', 'trace',
-        'dir', 'dirxml', 'group', 'groupCollapsed', 'groupEnd',
-        'time', 'timeEnd', 'profile', 'profileEnd', 'count', 'assert'
-      ];
-      
-      const bannerShown = false;
-      const printWarningBanner = () => {
-        try {
-          console.clear();
-          const bannerStyle = 'color:#ef4444;font-size:24px;font-weight:900;text-shadow:0 0 10px rgba(239,68,68,0.5);';
-          const subStyle = 'color:#f59e0b;font-size:14px;font-weight:bold;';
-          const descStyle = 'color:#94a3b8;font-size:12px;';
-          console.log('%c🛡️ CIPHERVAULT TITANIUM DEFENSE v6.0', bannerStyle);
-          console.log('%c⛔ CẢNH BÁO: MỌI HÀNH VI XÂM NHẬP / REVERSE-ENGINEERING ĐỀU BỊ KHÓA!', subStyle);
-          console.log('%cHệ thống giám sát bộ nhớ AES-256 đang hoạt động. Mọi probe đều được lưu log an ninh.', descStyle);
-        } catch {}
-      };
-
-      // Periodic security monitor
-      setInterval(() => {
-        if (_debuggerTrap() || _detectBySize() || _detectByToString()) {
-          if (!_devtoolsOpen) {
-            _devtoolsOpen = true;
-            printWarningBanner();
-          }
-        } else {
-          _devtoolsOpen = false;
-        }
-      }, 1200);
-    })();
-
-    // [LAYER 6] HOTKEY INTERCEPT & ANTI-SOURCE EXTRACTION
+    // [L2] HOTKEY INTERCEPT — F12, Ctrl+Shift+I/J/C/K, Ctrl+U, Ctrl+P
+    // Ctrl+S intentionally NOT blocked so user can save data in forms
     window.addEventListener('keydown', (e) => {
-      // F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C, Ctrl+Shift+K, Ctrl+U, Ctrl+S, Ctrl+P, Ctrl+A (if in critical)
-      const isF12 = e.key === 'F12' || e.keyCode === 123;
-      const isDevToolsCombo = e.ctrlKey && e.shiftKey && ['I','i','J','j','C','c','K','k','X','x'].includes(e.key);
-      const isViewSource = e.ctrlKey && (e.key === 'U' || e.key === 'u');
-      const isSavePage = e.ctrlKey && (e.key === 'S' || e.key === 's');
-      const isPrint = e.ctrlKey && (e.key === 'P' || e.key === 'p');
-
-      if (isF12 || isDevToolsCombo || isViewSource || isSavePage || isPrint) {
+      const isF12           = e.key === 'F12' || e.keyCode === 123;
+      const isDevToolsCombo = e.ctrlKey && e.shiftKey && ['I','i','J','j','C','c','K','k'].includes(e.key);
+      const isViewSource    = e.ctrlKey && !e.shiftKey && (e.key === 'U' || e.key === 'u');
+      const isPrint         = e.ctrlKey && !e.shiftKey && (e.key === 'P' || e.key === 'p');
+      if (isF12 || isDevToolsCombo || isViewSource || isPrint) {
         e.preventDefault();
         e.stopPropagation();
         _incBlockedProbes('HOTKEY_INTERCEPT_' + e.key);
@@ -145,147 +48,91 @@
       }
     }, true);
 
-    // [LAYER 7] CONTEXT MENU / RIGHT-CLICK SHIELD
+    // [L3] CONTEXT MENU — allow in input/textarea so user can paste
     window.addEventListener('contextmenu', (e) => {
+      const tag = e.target ? e.target.tagName : '';
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
       e.preventDefault();
-      _incBlockedProbes('RIGHT_CLICK_MENU_BLOCK');
-      return false;
+      _incBlockedProbes('RIGHT_CLICK_BLOCK');
     }, true);
 
-    // [LAYER 8] ANTI-SELECTION & ANTI-DRAG ON SENSITIVE CRYPTO ELEMENTS
+    // [L4] ANTI-DRAG
     window.addEventListener('dragstart', (e) => {
-      if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
-        e.preventDefault();
-      }
+      if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') e.preventDefault();
     }, true);
 
-    // [LAYER 9] SCRIPT INJECTION & TAMPERMONKEY / EXTENSION WATCHDOG
+    // [L5] ROGUE SCRIPT INJECTION WATCHDOG
     try {
-      const _observer = new MutationObserver((mutations) => {
+      const _scriptObserver = new MutationObserver((mutations) => {
         for (const m of mutations) {
           for (const node of m.addedNodes) {
             if (node.tagName === 'SCRIPT') {
               const src = (node.src || '').toLowerCase();
-              const allowed = src.includes('cdnjs') || src.includes('app.js') || src.includes('jszip') || src.includes('qrcode');
-              if (!allowed && !node.getAttribute('data-cvlt-safe')) {
-                node.remove();
-                _incBlockedProbes('ROGUE_SCRIPT_INJECTION_BLOCKED');
-              }
+              const safe = src === '' || src.includes('cdnjs') || src.includes('localhost') ||
+                           src.includes('app.js') || src.includes('jszip') || src.includes('qrcode') ||
+                           node.getAttribute('data-cvlt-safe') === 'true';
+              if (!safe) { node.remove(); _incBlockedProbes('ROGUE_SCRIPT_BLOCKED: ' + src.slice(0,80)); }
             }
           }
         }
       });
-      _observer.observe(document.documentElement, { childList: true, subtree: true });
+      _scriptObserver.observe(document.documentElement, { childList: true, subtree: true });
     } catch {}
 
-    // [LAYER 10] DOM INTEGRITY SELF-HEALING & TAMPER DEFENSE
-    function _integrityCheck() {
-      const loginModal = document.getElementById('adminLoginModal');
-      const dashboard = document.getElementById('adminDashboardModal');
-      const appContainer = document.querySelector('.app-container');
-      if (!loginModal || !dashboard || !appContainer) {
-        _incBlockedProbes('CORE_DOM_TAMPER_DETECTED');
-        document.body.innerHTML = `
-          <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;
-            background:#07090e;color:#ef4444;font-family:monospace;text-align:center;flex-direction:column;gap:16px;">
-            <div style="font-size:3.5rem;">🛡️</div>
-            <h1 style="font-size:1.5rem;color:#f97316;letter-spacing:1px;">CVLT TITANIUM SHIELD — CRITICAL INTEGRITY VIOLATION</h1>
-            <p style="color:#94a3b8;font-size:0.95rem;">Cấu trúc ứng dụng lõi đã bị can thiệp. Phiên làm việc đã bị vô hiệu hóa an toàn.</p>
-            <p style="color:#475569;font-size:0.75rem;">SECURITY_KERNEL_STATUS: 0xCVLT_TAMPER_TRIP_LOCKED</p>
-          </div>`;
-        return false;
-      }
-      return true;
-    }
-    setTimeout(_integrityCheck, 1500);
-    setInterval(_integrityCheck, 10000);
-
-    // [LAYER 11] ANTI-BRUTEFORCE & RATE LIMITER
-    function _checkRateLimit() {
-      const now = Date.now();
-      if (_lockoutUntil > now) {
-        const remaining = Math.ceil((_lockoutUntil - now) / 1000);
-        return { allowed: false, remaining };
-      }
-      return { allowed: true };
-    }
-
-    function _recordFailedAttempt() {
-      _loginAttempts++;
-      _incBlockedProbes('FAILED_LOGIN_ATTEMPT');
-      if (_loginAttempts >= MAX_ATTEMPTS) {
-        _lockoutUntil = Date.now() + LOCKOUT_MS;
-        _loginAttempts = 0;
-        return true;
-      }
-      return false;
-    }
-
-    function _recordSuccessLogin() {
-      _loginAttempts = 0;
-      _lockoutUntil = 0;
-    }
-
-    // [LAYER 12] GLOBAL SCOPE HONEYPOT DECOY TRAPS (x16 Decoys)
-    const _HONEYPOT_KEYS = [
-      '__ADMIN_BYPASS__', '_masterKey_', '__unlockAll__',
-      '_rootAccess_', '__CVLT_OVERRIDE__', '_patchAdmin_',
-      'CVLT_DEBUG_MODE', '__SECRET_KEY__', '_hackerMode_',
-      '__ROOT_SUPERUSER__', '_bypassValidation_', '__ADMIN_BACKDOOR__',
-      '_crackStudio_', '__vipFreeAccess__', '_bypassLicenseKey_', '__rawCryptoKey__'
-    ];
-    _HONEYPOT_KEYS.forEach(k => {
+    // [L6] HONEYPOT DECOY TRAPS
+    ['__ADMIN_BYPASS__','_masterKey_','__unlockAll__','_rootAccess_','__CVLT_OVERRIDE__',
+     '_patchAdmin_','CVLT_DEBUG_MODE','__SECRET_KEY__','_hackerMode_','__ROOT_SUPERUSER__',
+     '_bypassValidation_','__ADMIN_BACKDOOR__','_crackStudio_','__vipFreeAccess__',
+     '_bypassLicenseKey_','__rawCryptoKey__'].forEach(k => {
       try {
         Object.defineProperty(window, k, {
-          get() {
-            _incBlockedProbes('HONEYPOT_VARIABLE_ACCESSED_' + k);
-            return 'ERR_HONEYPOT_TRAP_TRIGGERED_0x403_ACCESS_DENIED';
-          },
-          set() {
-            _incBlockedProbes('HONEYPOT_VARIABLE_MODIFIED_' + k);
-            return false;
-          },
+          get() { _incBlockedProbes('HONEYPOT_ACCESSED:' + k); return 'ERR_HONEYPOT_0x403'; },
+          set() { _incBlockedProbes('HONEYPOT_MODIFIED:' + k); return false; },
           configurable: false
         });
       } catch {}
     });
 
-    // [LAYER 13] FAKE DECOMPILER DECOY TRAPS
+    // [L7] FAKE API DECOY
     window._cvlt_sys = Object.freeze({
-      unlockAdmin: function() { _incBlockedProbes('DECOY_API_CALL'); return { status: 403, error: 'SIGNATURE_REJECTED' }; },
-      generateFreeKey: function() { return 'CVLT-DECOY-TRAP-EXPIRED-NULL'; },
-      getRootCredentials: function() { return { error: 'PROTECTED_BY_KERNEL_SHIELD' }; },
-      extractSource: function() { return { error: 'BINARY_COMPILED_CLIENT_SIDE' }; }
+      unlockAdmin:        () => ({ status: 403, error: 'SIGNATURE_REJECTED' }),
+      generateFreeKey:    () => 'CVLT-DECOY-TRAP-NULL',
+      getRootCredentials: () => ({ error: 'PROTECTED_BY_KERNEL_SHIELD' }),
+      extractSource:      () => ({ error: 'BINARY_COMPILED_CLIENT_SIDE' })
     });
 
-    // [LAYER 14] PROTOTYPE TAMPER FREEZE & MONKEY-PATCH SEAL
-    try {
-      Object.freeze(Object.prototype);
-      Object.freeze(Array.prototype);
-      Object.freeze(String.prototype);
-      Object.freeze(Function.prototype);
-    } catch {}
-
-    // [LAYER 15] FUNCTION INTEGRITY CHECK (Anti-Hook on Core Functions)
-    function _verifyCoreIntegrity() {
-      try {
-        if (typeof LicenseKeyManager !== 'undefined' && LicenseKeyManager.validateKey) {
-          const fnStr = LicenseKeyManager.validateKey.toString();
-          if (fnStr.includes('return true') || fnStr.includes('return {valid:true}') || !fnStr.includes('expiresTimestamp')) {
-            _incBlockedProbes('CORE_FUNCTION_HOOK_DETECTED');
-            document.body.innerHTML = '<h1 style="color:red;text-align:center;margin-top:20%;">FATAL: Core Validation Hook Detected!</h1>';
-          }
-        }
-      } catch {}
+    // [L8] ANTI-BRUTEFORCE RATE LIMITER
+    function _checkRateLimit() {
+      const now = Date.now();
+      if (_lockoutUntil > now) return { allowed: false, remaining: Math.ceil((_lockoutUntil - now) / 1000) };
+      return { allowed: true };
     }
-    setInterval(_verifyCoreIntegrity, 12000);
+    function _recordFailedAttempt() {
+      _loginAttempts++;
+      _incBlockedProbes('FAILED_LOGIN');
+      if (_loginAttempts >= MAX_ATTEMPTS) { _lockoutUntil = Date.now() + LOCKOUT_MS; _loginAttempts = 0; return true; }
+      return false;
+    }
+    function _recordSuccessLogin() { _loginAttempts = 0; _lockoutUntil = 0; }
 
-    return {
-      checkRateLimit: _checkRateLimit,
-      recordFail: _recordFailedAttempt,
-      recordSuccess: _recordSuccessLogin,
-      getBlockedProbesCount: () => _blockedProbesCount
-    };
+    // [L9] DEVTOOLS SIZE DETECTION — passive only, logs warning banner
+    setInterval(() => {
+      const wDiff = window.outerWidth  - window.innerWidth;
+      const hDiff = window.outerHeight - window.innerHeight;
+      if (wDiff > 300 || hDiff > 300) {
+        if (!_devtoolsOpen) {
+          _devtoolsOpen = true;
+          _incBlockedProbes('DEVTOOLS_DETECTED');
+          try {
+            console.clear();
+            console.log('%c CIPHERVAULT DEFENSE v7.0 ', 'background:#ef4444;color:#fff;font-size:18px;font-weight:900;padding:4px 12px;border-radius:4px;');
+            console.log('%c Canh bao: Devtools mo. Moi hanh vi reverse engineering deu bi ghi log!', 'color:#f59e0b;font-size:13px;font-weight:bold;');
+          } catch {}
+        }
+      } else { _devtoolsOpen = false; }
+    }, 5000);
+
+    return { checkRateLimit: _checkRateLimit, recordFail: _recordFailedAttempt, recordSuccess: _recordSuccessLogin, getBlockedProbesCount: () => _blockedProbesCount };
   })();
 
   // ============================================================================
