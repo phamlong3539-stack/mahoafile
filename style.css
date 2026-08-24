@@ -3168,5 +3168,192 @@ textarea {
   color: #fde68a;
 }
 
+/* ==========================================================================
+   AI IPA COPILOT & CUSTOM STANDALONE IPA CREATOR STYLES
+   ========================================================================== */
+.ai-copilot-card {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.08), rgba(0, 240, 255, 0.06));
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  margin-top: 14px;
+  box-shadow: 0 4px 20px rgba(168, 85, 247, 0.1);
+}
+
+.ai-copilot-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.ai-copilot-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ai-copilot-title span.badge {
+  background: linear-gradient(135deg, #a855f7, #00f0ff);
+  color: #000;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+}
+
+.ai-chat-box {
+  max-height: 240px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 8px;
+  border: 1px solid var(--border-subtle);
+}
+
+.ai-chat-msg {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.ai-chat-msg.user {
+  flex-direction: row-reverse;
+}
+
+.ai-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+
+.ai-avatar.bot {
+  background: linear-gradient(135deg, #a855f7, #6366f1);
+  color: #fff;
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.4);
+}
+
+.ai-avatar.user {
+  background: linear-gradient(135deg, #00f0ff, #0284c7);
+  color: #000;
+}
+
+.ai-msg-content {
+  background: rgba(255, 255, 255, 0.06);
+  padding: 8px 12px;
+  border-radius: 10px;
+  color: #e2e8f0;
+  max-width: 85%;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ai-chat-msg.user .ai-msg-content {
+  background: rgba(0, 240, 255, 0.15);
+  border-color: rgba(0, 240, 255, 0.3);
+  color: #fff;
+}
+
+.ai-quick-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.ai-chip {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #cbd5e1;
+  font-size: 0.73rem;
+  padding: 4px 10px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+}
+
+.ai-chip:hover {
+  background: rgba(168, 85, 247, 0.2);
+  border-color: #a855f7;
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.ai-input-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* Custom IPA Creator Modal */
+.app-template-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.app-template-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.app-template-card:hover, .app-template-card.active {
+  background: rgba(0, 240, 255, 0.12);
+  border-color: var(--accent-cyan);
+  transform: translateY(-2px);
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+}
+
+.app-template-card .icon {
+  font-size: 1.8rem;
+  margin-bottom: 6px;
+}
+
+.app-template-card .title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.app-template-card .desc {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  margin-top: 3px;
+}
+
+.icon-maker-preview-box {
+  width: 72px;
+  height: 72px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+
 
 
