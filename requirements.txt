@@ -1,0 +1,2 @@
+# This is a static HTML/JavaScript application
+# No Python dependencies required
