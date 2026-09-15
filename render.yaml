@@ -1,5 +1,9 @@
 services:
-  - type: static
+  - type: web
     name: ciphervault-pro
-    staticPublishPath: ./
-    buildCommand: "# Static site deployment"
+    runtime: python3
+    buildCommand: "echo 'Building...'"
+    startCommand: "python -m http.server $PORT"
+    envVars:
+      - key: PORT
+        value: 3000
