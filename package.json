@@ -1,0 +1,13 @@
+{
+  "name": "ciphervault-pro",
+  "version": "1.0.0",
+  "description": "Cryptographic Web Suite - AES-256 & RSA-4096",
+  "main": "index.html",
+  "scripts": {
+    "start": "python -m http.server 3000",
+    "dev": "python -m http.server 8080"
+  },
+  "keywords": ["cryptography", "encryption", "security"],
+  "author": "phamlong3539-stack",
+  "license": "MIT"
+}
