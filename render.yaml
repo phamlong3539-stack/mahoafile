@@ -1,0 +1,6 @@
+services:
+  - type: static
+    name: ciphervault-pro
+    staticPublishPath: ./
+    buildCommand: "echo 'Static site - no build needed'"
+    envVars: []
